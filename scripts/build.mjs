@@ -2,13 +2,39 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolve, join } from 'node:path';
-import { createWhatsNew } from '../src/features/whats-new/module.mjs';
+import { build as bundleJavaScript } from 'esbuild';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cssMarker = '__COURTSIDE_INLINE_STYLES__';
 const jsMarker = '__COURTSIDE_INLINE_SCRIPT__';
 const target = join(root, 'dist', 'courtside.html');
 const whatsNewPath = 'src/features/whats-new/controller.js';
+const whatsNewEntry = join(root, 'src/features/whats-new/entry.mjs');
+
+// Only the migrated feature is bundled for now. The remaining 46 fragments
+// retain their original classic-script execution order until their interfaces
+// can be safely converted and tested.
+async function buildWhatsNewBundle() {
+  const result = await bundleJavaScript({
+    entryPoints: [whatsNewEntry],
+    bundle: true,
+    platform: 'browser',
+    format: 'iife',
+    globalName: 'CourtsideWhatsNew',
+    target: ['es2020'],
+    write: false,
+    outfile: 'courtside-whats-new.js',
+    sourcemap: false,
+    minify: false,
+    legalComments: 'none',
+    logLevel: 'silent',
+    charset: 'utf8',
+  });
+  if (result.outputFiles?.length !== 1 || !result.outputFiles[0].text) {
+    throw new Error('esbuild did not produce one self-contained Whats New bundle');
+  }
+  return result.outputFiles[0].text;
+}
 // Feature fragments are concatenated back into the original classic script scope.
 // This maintains exact execution order and does NOT require runtime ES module loading.
 const featureFragments = [
@@ -83,13 +109,10 @@ export async function build({ verifyBaseline = false } = {}) {
         // Frozen Phase 3-era controller: only used to prove untouched reference parity.
         fragment = await readFile(join(root, 'src/features/whats-new/controller.legacy.js'), 'utf8');
       } else {
-        // One-module bridge: native ESM import at build time, self-contained factory
-        // embedded in the classic inline browser script (no runtime imports/CORS).
-        const factory = createWhatsNew.toString();
-        if (!factory.startsWith('function createWhatsNew(') || factory.includes('[native code]')) {
-          throw new Error("What's New factory is not a serializable source function");
-        }
-        fragment = `  const createWhatsNew = ${factory};\n${fragment}`;
+        // esbuild resolves real ES module imports and emits an IIFE. Embedding
+        // it at the original controller marker keeps a single classic script.
+        const bundledFeature = await buildWhatsNewBundle();
+        fragment = `  ${bundledFeature}\n${fragment}`;
       }
     }
     compiledJs = replaceExactlyOnce(compiledJs, marker, fragment);

@@ -175,7 +175,10 @@ test('new standalone pilot embeds isolated Whats New factory while legacy proof 
   const output = await readFile(modern.path, 'utf8');
   const legacy = await readFile(join(root, 'baseline/courtside_1.6.1.html'), 'utf8');
   assert.notEqual(output, legacy, 'Pilot intentionally changes the implementation');
-  assert.match(output, /const createWhatsNew = function createWhatsNew\(/);
+  assert.match(output, /CourtsideWhatsNew/);
+  assert.match(output, /createWhatsNew/);
+  assert.doesNotMatch(output, /createWhatsNew\.toString\(\)/);
+  assert.doesNotMatch(output, /\bimport\s+[^;]*module\.mjs/);
   assert.match(output, /currentRelease: COURTSIDE_RELEASE/);
   assert.doesNotMatch(output, /\bexport function createWhatsNew/);
   assert.doesNotMatch(output, /<script[^>]+\bsrc\s*=/i);
@@ -186,4 +189,20 @@ test('new standalone pilot embeds isolated Whats New factory while legacy proof 
   const oldBuild = await build({ verifyBaseline: true });
   assert.notEqual(oldBuild.path, modern.path, 'Baseline proof must never overwrite modern artifact');
   assert.equal(await readFile(modern.path, 'utf8'), output, 'Legacy verification must not overwrite the modern output');
+});
+
+
+test('esbuild resolves the real Whats New module entry without requiring runtime JS files', async () => {
+  const entry = await readFile(join(root, 'src/features/whats-new/entry.mjs'), 'utf8');
+  assert.match(entry, /export \{ createWhatsNew \} from '.\/module.mjs'/);
+  const buildText = await readFile(join(root, 'scripts/build.mjs'), 'utf8');
+  assert.match(buildText, /bundle: true/);
+  assert.match(buildText, /format: 'iife'/);
+  assert.match(buildText, /globalName: 'CourtsideWhatsNew'/);
+  assert.doesNotMatch(buildText, /createWhatsNew\.toString\(\)/);
+  const result = await build();
+  const html = await readFile(result.path,'utf8');
+  assert.match(html, /CourtsideWhatsNew\.createWhatsNew\(\{/);
+  assert.doesNotMatch(html, /<script[^>]*src=/i);
+  assert.equal((html.match(/<script>/g)||[]).length, 1);
 });

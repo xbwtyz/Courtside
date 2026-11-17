@@ -14,6 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install build dependencies
+        run: npm install --no-audit --no-fund
       - name: Check JavaScript syntax
         run: npm run check:syntax
       - name: Run unit and build tests
