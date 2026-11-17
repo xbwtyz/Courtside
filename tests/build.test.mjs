@@ -439,3 +439,20 @@ test('Chunk 13 standings, team profiles and team handlers build as standalone II
   assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
   const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 14 player profile data, dialog and handlers compile to one classic script',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,global] of [["src/features/player-profile/data.js","CourtsidePlayerProfileData"],["src/features/player-profile/dialog.js","CourtsidePlayerProfileDialog"],["src/features/player-profile/handlers.js","CourtsidePlayerProfileHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(global));
+    assert.match(html,new RegExp(global));
+  }
+  const current=await readFile(join(root,'src/features/player-profile/dialog.pre-module.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/player-profile/dialog.legacy.js'),'utf8');
+  assert.match(current,/gameStore\.navigateToDate\(day\)/);
+  assert.doesNotMatch(frozen,/gameStore\.navigateToDate\(day\)/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
