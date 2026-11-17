@@ -242,3 +242,19 @@ test('core formatters are bundled through esbuild and legacy reference remains u
   assert.ok((await readFile(legacy.path)).equals(baseline));
   assert.equal(await readFile(modern.path,'utf8'),html);
 });
+
+test('ESPN scheduler is bundled as one private instance while the frozen legacy build remains exact', async () => {
+  const modern = await build();
+  const html = await readFile(modern.path,'utf8');
+  assert.match(html,/CourtsideEspnScheduler/);
+  assert.match(html,/CourtsideEspnScheduler\.createEspnScheduler\(\{/);
+  assert.doesNotMatch(html,/<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html,/<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html,'Legacy proof cannot overwrite the modern artifact');
+});

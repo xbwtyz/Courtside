@@ -58,7 +58,7 @@ test('refresh policy respects 10s/15s/60s and stops polling historical final gam
 });
 
 test('ESPN request queue prioritizes live requests, respects cooldown, and limits overlapping jobs', async () => {
-  const config = await source('src/api/espn/request-scheduler.js');
+  const config = await source('src/api/espn/request-scheduler.legacy.js');
   const ctx = createContext({ console, Promise, Date, setTimeout, clearTimeout, espnPoll:{sharedUntil:0,scoreFailures:0}, statsPoll:{failures:0}, ESPN_MAX_BACKOFF_MS:300000 });
   runInContext(config + '\nglobalThis.__request = requestESPN; globalThis.__retry = retryAfterMs; globalThis.__note = noteEspnResponseError;', ctx);
   const requestESPN=ctx.__request;
