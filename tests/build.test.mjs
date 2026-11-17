@@ -36,7 +36,7 @@ test('Phase 3 extracts both features into named source files without changing th
   const host = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
   const parts = [
     ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js', 'CourtsideDataLogCore.createDataLog('],
-    ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js', 'function alertsObserveScoreboard('],
+    ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js', 'CourtsideLiveAlerts.createLiveAlerts('],
     ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js', 'CourtsideDataLogControls.attachDataLogControls('],
   ];
   for (const [marker, path, expected] of parts) {
@@ -50,7 +50,9 @@ test('Phase 3 extracts both features into named source files without changing th
     ['src/features/data-log/core.legacy.js', 'function dataLogCompare('],
     ['src/features/data-log/core.module.mjs', 'function dataLogCompare('],
     ['src/features/data-log/controls.legacy.js', "$('dataLogExport').addEventListener"],
-    ['src/features/data-log/controls.module.mjs', "$('dataLogExport').addEventListener"]
+    ['src/features/data-log/controls.module.mjs', "$('dataLogExport').addEventListener"],
+    ['src/features/live-alerts/alerts.legacy.js', 'function alertsObserveScoreboard('],
+    ['src/features/live-alerts/alerts.module.mjs', 'function alertsObserveScoreboard(']
   ]) {
     const text = await readFile(join(root,path),'utf8');
     assert.ok(text.includes(expected), `${path} should contain ${expected}`);

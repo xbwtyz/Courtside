@@ -113,7 +113,7 @@ test('saved preferences preserve valid options and reject unsafe or obsolete val
 });
 
 test('alerts do not replay baseline; emit start/lead/close/final only on observed transitions', async () => {
-  const code=(await source('src/features/live-alerts/alerts.js')).split('  function alertsUpdateToastVisibility()')[0];
+  const code=(await source('src/features/live-alerts/alerts.legacy.js')).split('  function alertsUpdateToastVisibility()')[0];
   assert.ok(code.includes('function alertsObserveScoreboard('));
   const date='2026-11-16';
   const settingsPrefs={ alertsEnabled:true,alertsOverlay:false, alertsScope:'all',alertsTeams:[],alertsStart:true,alertsHalftime:false,alertsFinal:true,alertsLead:true,alertsClose:true };
