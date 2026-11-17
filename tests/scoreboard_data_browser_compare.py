@@ -41,7 +41,10 @@ JS=r"""async fixture => {
   try{
     state.date='2026-11-16';
     state.games=[];state.loading=false;state.error='';state.firstLoaded=false;
+    // Blocked startup ESPN work may still be pending; neutralize both versions.
+    state.controller?.abort();state.controller=null;state.fetchDate=null;
     state.lastUpdated=null;state.nextAt=0;state.requestSeq++;
+    espnPoll.scoreFailures=0;
     espnPoll.sharedUntil=Date.now()+90000;
     updateStatus();
     records.push(capture('initial'));
