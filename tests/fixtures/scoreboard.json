@@ -1,0 +1,31 @@
+{
+  "events": [
+    {
+      "id": "401000001",
+      "date": "2026-11-16T23:00:00Z",
+      "status": {"period": 0, "displayClock": "0:00", "type": {"state": "pre", "name": "STATUS_SCHEDULED"}},
+      "competitions": [{"competitors": [
+        {"homeAway": "away", "score": "0", "team": {"id": "1", "abbreviation": "ATL", "displayName": "Atlanta Hawks"}},
+        {"homeAway": "home", "score": "0", "team": {"id": "2", "abbreviation": "BOS", "displayName": "Boston Celtics"}}
+      ]}]
+    },
+    {
+      "id": "401000002",
+      "date": "2026-11-16T22:00:00Z",
+      "status": {"period": 4, "displayClock": "1:55", "type": {"state": "in", "name": "STATUS_IN_PROGRESS"}},
+      "competitions": [{"competitors": [
+        {"homeAway": "away", "score": "101", "team": {"id": "7", "abbreviation": "DEN", "displayName": "Denver Nuggets"}},
+        {"homeAway": "home", "score": "102", "team": {"id": "8", "abbreviation": "DET", "displayName": "Detroit Pistons"}}
+      ]}]
+    },
+    {
+      "id": "401000003",
+      "date": "2026-11-16T20:00:00Z",
+      "status": {"period": 4, "displayClock": "0:00", "type": {"state": "post", "name": "STATUS_FINAL"}},
+      "competitions": [{"competitors": [
+        {"homeAway": "away", "score": "115", "team": {"id": "12", "abbreviation": "LAC", "displayName": "Los Angeles Clippers"}},
+        {"homeAway": "home", "score": "110", "team": {"id": "13", "abbreviation": "LAL", "displayName": "Los Angeles Lakers"}}
+      ]}]
+    }
+  ]
+}
