@@ -168,3 +168,22 @@ test('Phase 3D stage 3 modular source files reconstruct at unique markers', asyn
   const result=await build({verifyBaseline:true});
   assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
 });
+
+
+test('new standalone pilot embeds isolated Whats New factory while legacy proof stays frozen', async () => {
+  const modern = await build();
+  const output = await readFile(modern.path, 'utf8');
+  const legacy = await readFile(join(root, 'baseline/courtside_1.6.1.html'), 'utf8');
+  assert.notEqual(output, legacy, 'Pilot intentionally changes the implementation');
+  assert.match(output, /const createWhatsNew = function createWhatsNew\(/);
+  assert.match(output, /currentRelease: COURTSIDE_RELEASE/);
+  assert.doesNotMatch(output, /\bexport function createWhatsNew/);
+  assert.doesNotMatch(output, /<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(output, /<script[^>]+\btype\s*=\s*["']module/i);
+  const match = output.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(() => new Script(match[1]));
+  const oldBuild = await build({ verifyBaseline: true });
+  assert.notEqual(oldBuild.path, modern.path, 'Baseline proof must never overwrite modern artifact');
+  assert.equal(await readFile(modern.path, 'utf8'), output, 'Legacy verification must not overwrite the modern output');
+});
