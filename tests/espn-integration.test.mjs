@@ -109,7 +109,7 @@ function makeScoreboard(){
 
 test('switching dates cancels old scoreboard request and ignores stale ESPN response',async()=>{
   const h=makeScoreboard();
-  const full=await source('src/features/scoreboard/data.js');
+  const full=await source('src/features/scoreboard/data.pre-module.js');
   const code=full.slice(full.indexOf('  async function fetchScores('),full.indexOf('  function changeDay('));
   runInContext(code+'\nglobalThis.runScores=fetchScores;',h.ctx);
   const old=h.ctx.runScores(true);await tick();
@@ -136,7 +136,7 @@ test('switching dates cancels old scoreboard request and ignores stale ESPN resp
 
 test('scoreboard avoids duplicate same-day requests and blocks requests during rate-limit cooldown',async()=>{
   const h=makeScoreboard();
-  const full=await source('src/features/scoreboard/data.js');
+  const full=await source('src/features/scoreboard/data.pre-module.js');
   const code=full.slice(full.indexOf('  async function fetchScores('),full.indexOf('  function changeDay('));
   runInContext(code+'\nglobalThis.runScores=fetchScores;',h.ctx);
   const pending=h.ctx.runScores(true);await tick();

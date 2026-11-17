@@ -366,3 +366,26 @@ test('Chunk 09 bundles scoreboard renderer, card controls and navigation at clas
   const legacy=await build({verifyBaseline:true});
   assert.equal(legacy.sha256,expectedSha256);
 });
+
+test('Chunk 10 scoreboard data is a real module, with phase 4H and frozen baseline sources preserved',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/scoreboard/data.js'),'utf8');
+  const before=await readFile(join(root,'src/features/scoreboard/data.pre-module.js'),'utf8');
+  const orig=await readFile(join(root,'src/features/scoreboard/data.legacy.js'),'utf8');
+  const module=await readFile(join(root,'src/features/scoreboard/data.module.mjs'),'utf8');
+  for(const fn of ["classify","parseGames","updateStatus","fetchScores","changeDay","selectDay"]){
+    assert.match(before,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(orig,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(module,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideScoreboardData\.createScoreboardData/);
+  assert.match(html,/CourtsideScoreboardData/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  assert.match(before,/scoreRequestStatus\.complete/);
+  assert.match(orig,/espnPoll\.scoreFailures\+\+/);
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+});
