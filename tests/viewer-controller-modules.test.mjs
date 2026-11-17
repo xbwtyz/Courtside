@@ -131,7 +131,7 @@ async function sequence(mode){
   a.updateLiveGamePicker();states.push(shot(e));
   states.push({available:clone(a.availableSlotGames())});
   a.openViewer('401');
-  await Promise.resolve();await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
   states.push(shot(e));
   const count=e.srcWrites.length;
   a.paintViewer();
@@ -165,7 +165,7 @@ test('cache replacement and preference changes remain visible to the isolated co
   const e=await make('modern'),a=e.api;
   assert.equal(a.availableSlotGames().length,2);
   e.auraGames.clear();
-  e.auraGames.set('custom',{title:'New match',status:'live',date:0,sources:[]});
+  e.auraGames.set('custom',{title:'New match',status:'upcoming',date:0,sources:[]});
   const found=a.availableSlotGames();
   assert.equal(found.length,2);
   e.state.games=[];
