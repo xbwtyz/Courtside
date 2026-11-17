@@ -110,7 +110,7 @@ function shot(e) {
       gameId:e.viewerState.gameId,sourceUrl:e.viewerState.sourceUrl,request:e.viewerState.request,
       statsSeq:e.viewerState.statsSeq,layout:e.viewerState.layout,activeTile:e.viewerState.activeTile,
       statsOpen:e.viewerState.statsOpen,statsTab:e.viewerState.statsTab,statsDisplayKey:e.viewerState.statsDisplayKey,
-      slots:e.viewerState.slots.map(s=>({gameId:s.gameId,sourceUrl:s.sourceUrl,sources:s.sources.map(x=>x.url)})),
+      slots:clone(e.viewerState.slots.map(s=>({gameId:s.gameId,sourceUrl:s.sourceUrl,sources:s.sources.map(x=>x.url)}))),
       liveGames:clone(e.viewerState.liveGames)
     },
     visible:!e.$('viewer').hidden,
