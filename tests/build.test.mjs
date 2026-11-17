@@ -426,3 +426,16 @@ test('Chunk 12 retains hoisted Game Center callbacks needed by earlier refresh p
   assert.match(policy,/updateStatsSidebar/);
   assert.match(controller,/CourtsideGameCenterController\.createGameCenterController/);
 });
+
+test('Chunk 13 standings, team profiles and team handlers build as standalone IIFEs with frozen baselines',async()=>{
+  const built=await build(),html=await readFile(built.path,'utf8');
+  for(const [path,global] of [["src/features/standings/standings.js","CourtsideStandings"],["src/features/team-profile/profile.js","CourtsideTeamProfile"],["src/features/team-profile/handlers.js","CourtsideTeamProfileHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));
+    assert.ok(frozen.length>500);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});
