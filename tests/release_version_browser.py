@@ -13,7 +13,8 @@ with sync_playwright() as pw:
  try:
   page.set_content(PATH.read_text('utf8'),wait_until='domcontentloaded',timeout=20000)
   assert page.title().startswith('Courtside 1.7.0')
-  assert page.locator('.version-tag').inner_text()=='v1.7.0'
+  tag_text=page.locator('.version-tag').text_content().strip()
+  assert tag_text=='v1.7.0',repr(tag_text)
   assert page.locator('.version-tag').get_attribute('aria-label')=='Courtside version 1.7.0'
   assert page.locator('.cs-settings-foot').inner_text().endswith('Courtside v1.7.0')
   page.locator('#appSettingsOpen').click()
