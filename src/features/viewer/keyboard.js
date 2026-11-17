@@ -1,0 +1,1 @@
+  CourtsideViewerKeyboard.registerViewerKeyboard({document,$,closeViewer});

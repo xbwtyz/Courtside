@@ -1,0 +1,9 @@
+  CourtsideTeamProfileHandlers.registerTeamProfileHandlers({
+    $,document,getState:()=>state,
+    openTeamProfile:(...args)=>openTeamProfile(...args),
+    closeTeamProfile:(...args)=>closeTeamProfile(...args),
+    openViewer:(...args)=>openViewer(...args),
+    changeViewerGame:(...args)=>changeViewerGame(...args),
+    selectTeamProfileTab:(...args)=>selectTeamProfileTab(...args),
+    fetchTeamData:(...args)=>fetchTeamData(...args)
+  });

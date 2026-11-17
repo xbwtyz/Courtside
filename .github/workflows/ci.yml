@@ -1,0 +1,81 @@
+name: Courtside checks
+on:
+  push:
+    branches:
+      - refactor/modular-1.7
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  unit-and-parity:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install build dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check JavaScript syntax
+        run: npm run check:syntax
+      - name: Run unit and build tests
+        run: npm test
+      - name: Verify unchanged standalone artifact
+        run: npm run verify:baseline
+      - name: Build modular pilot distributable
+        run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check Python regression test syntax
+        run: python -m compileall -q tests
+      - name: Install browser test dependencies
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Run offline Chromium smoke and legacy comparison
+        run: npm run test:browser
+      - name: Prepare and verify root HTML distribution in checkout
+        run: |
+          npm run release:prepare
+          npm run release:verify
+      - name: Upload standalone development HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: courtside-1.7-modular-dev-html
+          path: dist/courtside.html
+          if-no-files-found: error
+
+  publish-root-on-refactor:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/refactor/modular-1.7'
+    needs: unit-and-parity
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build and verify audited root distribution
+        run: |
+          npm run verify:baseline
+          npm run release:prepare
+          npm run release:verify
+      - name: Commit root HTML on refactor branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- courtside.html; then
+            echo "Root courtside.html is already identical to the tested build."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- courtside.html
+          git commit -m 'build: synchronize v1.7.0 root HTML on refactor branch [skip ci]'
+          git push origin HEAD:refs/heads/refactor/modular-1.7

@@ -1,0 +1,9 @@
+  CourtsideLeagueLeadersHandlers.registerLeagueLeadersHandlers({
+    $,Number,Math,Object,leaderState,settingsPrefs,
+    leaderSetCategory:(...args)=>leaderSetCategory(...args),
+    leaderSetSort:(...args)=>leaderSetSort(...args),
+    renderLeaders:(...args)=>renderLeaders(...args),
+    fetchLeaders:(...args)=>fetchLeaders(...args),
+    saveSettingsPrefs:(...args)=>saveSettingsPrefs(...args),
+    syncSettingsControls:(...args)=>syncSettingsControls(...args)
+  });

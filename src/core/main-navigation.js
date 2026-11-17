@@ -1,0 +1,1 @@
+  CourtsideMainNavigation.registerMainNavigation({$,setMainView,fetchStandings});

@@ -1,0 +1,470 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { Script } from 'node:vm';
+import { build } from '../scripts/build.mjs';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const expectedSha256 = '0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e';
+
+test('Phase 2 build reproduces the untouched 1.6.1 file byte for byte', async () => {
+  const result = await build({ verifyBaseline: true });
+  const original = await readFile(join(root, 'baseline/courtside_1.6.1.html'));
+  const generated = await readFile(result.path);
+  assert.ok(generated.equals(original));
+  assert.equal(generated.length, 374363);
+  assert.equal(result.sha256, expectedSha256);
+  assert.equal(createHash('sha256').update(original).digest('hex'), expectedSha256);
+});
+
+test('Final artifact contains inlined CSS and JS, not source placeholders or module imports', async () => {
+  const result = await build();
+  const html = await readFile(result.path, 'utf8');
+  assert.equal((html.match(/<style\b/gi) || []).length, 1);
+  assert.equal((html.match(/<script\b/gi) || []).length, 1);
+  assert.doesNotMatch(html, /__COURTSIDE_INLINE_(?:STYLES|SCRIPT)__/);
+  assert.doesNotMatch(html, /<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html, /<script[^>]+\btype\s*=\s*["']module/i);
+  assert.match(html, /Courtside 1\.6\.1/);
+});
+
+
+test('Phase 3 extracts both features into named source files without changing their behavior', async () => {
+  const host = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
+  const parts = [
+    ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js', 'CourtsideDataLogCore.createDataLog('],
+    ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js', 'CourtsideLiveAlerts.createLiveAlerts('],
+    ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js', 'CourtsideDataLogControls.attachDataLogControls('],
+  ];
+  for (const [marker, path, expected] of parts) {
+    assert.equal(host.split(marker).length - 1, 1, `${marker} should appear once`);
+    const text = await readFile(join(root, path), 'utf8');
+    assert.ok(text.includes(expected), `${path} should contain ${expected}`);
+  }
+  // The original declarations still exist in exact frozen rollback sources,
+  // while the modular equivalents are independently testable at build time.
+  for (const [path, expected] of [
+    ['src/features/data-log/core.legacy.js', 'function dataLogCompare('],
+    ['src/features/data-log/core.module.mjs', 'function dataLogCompare('],
+    ['src/features/data-log/controls.legacy.js', "$('dataLogExport').addEventListener"],
+    ['src/features/data-log/controls.module.mjs', "$('dataLogExport').addEventListener"],
+    ['src/features/live-alerts/alerts.legacy.js', 'function alertsObserveScoreboard('],
+    ['src/features/live-alerts/alerts.module.mjs', 'function alertsObserveScoreboard(']
+  ]) {
+    const text = await readFile(join(root,path),'utf8');
+    assert.ok(text.includes(expected), `${path} should contain ${expected}`);
+  }
+});
+
+test('The generated browser script parses without adding import or export statements', async () => {
+  const result = await build({ verifyBaseline: true });
+  const html = await readFile(result.path, 'utf8');
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match, 'Classic application script should remain inline');
+  assert.doesNotMatch(match[1], /__COURTSIDE_(?:DATA_LOG|LIVE_ALERTS)_/);
+  assert.doesNotMatch(match[1], /(^|\n)\s*(?:import\s|export\s)/);
+  assert.doesNotThrow(() => new Script(match[1]));
+});
+
+
+test('Build reconstitutes source fragments at exact original positions', async () => {
+  const result = await build({verifyBaseline:true});
+  const original = await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  const output = await readFile(result.path);
+  assert.ok(output.equals(original));
+});
+
+
+test('Phase 3B ESPN, scoreboard and ticker fragments have exactly one insertion point each', async () => {
+  const app = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
+  const paths = [
+    ['ESPN_SCOREBOARD_ENDPOINT','src/api/espn/endpoint.js'],
+    ['ESPN_CONFIG','src/api/espn/config.js'],
+    ['ESPN_REQUEST_SCHEDULER','src/api/espn/request-scheduler.js'],
+    ['ESPN_REFRESH_POLICY','src/api/espn/refresh-policy.js'],
+    ['ESPN_GAME_SUMMARY','src/api/espn/game-summary.js'],
+    ['SCOREBOARD_DATA','src/features/scoreboard/data.js'],
+    ['SCOREBOARD_RENDER','src/features/scoreboard/render.js'],
+    ['SCOREBOARD_CARD_CONTROLS','src/features/scoreboard/card-controls.js'],
+    ['SCOREBOARD_NAVIGATION','src/features/scoreboard/navigation.js'],
+    ['TICKER_CONTROLLER','src/features/ticker/controller.js'],
+    ['TICKER_CLICKS','src/features/ticker/clicks.js'],
+  ];
+  for (const [name,path] of paths) {
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1, `Expected one ${name} marker`);
+    const section=await readFile(join(root,path),'utf8');
+    assert.ok(section.length>15,`Empty feature fragment: ${path}`);
+  }
+  const result = await build({verifyBaseline:true});
+  const output=await readFile(result.path,'utf8');
+  for (const [name] of paths) assert.ok(!output.includes(`/*__COURTSIDE_${name}__*/`));
+});
+
+
+test('Phase 3C stage 1 feature files reconstruct at unique marker positions', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['GAME_CENTER_BOX_SCORE', 'src/features/game-center/box-score.js'], ['GAME_CENTER_CHARTS', 'src/features/game-center/charts.js'], ['GAME_CENTER_RENDER', 'src/features/game-center/render.js'], ['GAME_CENTER_CONTROLLER', 'src/features/game-center/controller.js'], ['GAME_CENTER_HANDLERS', 'src/features/game-center/handlers.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('Phase 3C stage 2 feature files reconstruct at unique marker positions', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['STANDINGS', 'src/features/standings/standings.js'], ['TEAM_PROFILE', 'src/features/team-profile/profile.js'], ['TEAM_PROFILE_HANDLERS', 'src/features/team-profile/handlers.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('Phase 3C stage 3 feature files reconstruct at unique marker positions', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['PLAYER_PROFILE_DATA', 'src/features/player-profile/data.js'], ['PLAYER_PROFILE_DIALOG', 'src/features/player-profile/dialog.js'], ['PLAYER_PROFILE_HANDLERS', 'src/features/player-profile/handlers.js'], ['LEAGUE_LEADERS_DATA', 'src/features/league-leaders/data.js'], ['LEAGUE_LEADERS_RENDER', 'src/features/league-leaders/render.js'], ['LEAGUE_LEADERS_HANDLERS', 'src/features/league-leaders/handlers.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('Phase 3D stage 1 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['STREAM_PROVIDERS_CONFIG', 'src/api/streams/config.js'], ['STREAM_PROVIDERS_REQUESTS', 'src/api/streams/requests.js'], ['STREAM_PROVIDERS_MATCHING', 'src/api/streams/matching.js'], ['VIEWER_TITLE', 'src/features/viewer/title.js'], ['VIEWER_CONTROLLER', 'src/features/viewer/controller.js'], ['VIEWER_CONTROLS', 'src/features/viewer/controls.js'], ['VIEWER_KEYBOARD', 'src/features/viewer/keyboard.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('Phase 3D stage 2 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['PREFERENCES', 'src/features/settings/preferences.js'], ['CORE_UTILS', 'src/core/utils.js'], ['CORE_STATE', 'src/core/state.js'], ['SETTINGS_SHORTCUT', 'src/features/settings/shortcut.js'], ['WHATS_NEW_RELEASES', 'src/features/whats-new/releases.js'], ['WHATS_NEW_CONTROLLER', 'src/features/whats-new/controller.js'], ['SETTINGS_DIALOG', 'src/features/settings/dialog.js'], ['SETTINGS_INITIALIZATION', 'src/features/settings/initialization.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('Phase 3D stage 3 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['CORE_DOM', 'src/core/dom.js'], ['MAIN_NAVIGATION', 'src/core/main-navigation.js'], ['CORE_POLLING_BOOTSTRAP', 'src/core/polling-bootstrap.js'], ['STAT_GLOSSARY', 'src/features/stat-glossary/glossary.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
+
+
+test('new standalone pilot embeds isolated Whats New factory while legacy proof stays frozen', async () => {
+  const modern = await build();
+  const output = await readFile(modern.path, 'utf8');
+  const legacy = await readFile(join(root, 'baseline/courtside_1.6.1.html'), 'utf8');
+  assert.notEqual(output, legacy, 'Pilot intentionally changes the implementation');
+  assert.match(output, /CourtsideWhatsNew/);
+  assert.match(output, /createWhatsNew/);
+  assert.doesNotMatch(output, /createWhatsNew\.toString\(\)/);
+  assert.doesNotMatch(output, /\bimport\s+[^;]*module\.mjs/);
+  assert.match(output, /currentRelease: COURTSIDE_RELEASE/);
+  assert.doesNotMatch(output, /\bexport function createWhatsNew/);
+  assert.doesNotMatch(output, /<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(output, /<script[^>]+\btype\s*=\s*["']module/i);
+  const match = output.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(() => new Script(match[1]));
+  const oldBuild = await build({ verifyBaseline: true });
+  assert.notEqual(oldBuild.path, modern.path, 'Baseline proof must never overwrite modern artifact');
+  assert.equal(await readFile(modern.path, 'utf8'), output, 'Legacy verification must not overwrite the modern output');
+});
+
+
+test('esbuild resolves the real Whats New module entry without requiring runtime JS files', async () => {
+  const entry = await readFile(join(root, 'src/features/whats-new/entry.mjs'), 'utf8');
+  assert.match(entry, /export \{ createWhatsNew \} from '.\/module.mjs'/);
+  const buildText = await readFile(join(root, 'scripts/build.mjs'), 'utf8');
+  assert.match(buildText, /bundle: true/);
+  assert.match(buildText, /format: 'iife'/);
+  assert.match(buildText, /name: 'CourtsideWhatsNew'/);
+  assert.match(buildText, /name: 'CourtsideStatGlossary'/);
+  assert.match(buildText, /globalName: feature.name/);
+  assert.doesNotMatch(buildText, /createWhatsNew\.toString\(\)/);
+  const result = await build();
+  const html = await readFile(result.path,'utf8');
+  assert.match(html, /CourtsideWhatsNew\.createWhatsNew\(\{/);
+  assert.doesNotMatch(html, /<script[^>]*src=/i);
+  assert.equal((html.match(/<script>/g)||[]).length, 1);
+});
+
+
+test('glossary is bundled as a private controller and legacy proof remains untouched', async () => {
+  const result = await build();
+  const html = await readFile(result.path,'utf8');
+  assert.match(html, /CourtsideStatGlossary/);
+  assert.match(html, /CourtsideStatGlossary\.createStatGlossary\(\{/);
+  assert.doesNotMatch(html, /<script[^>]*\bsrc\s*=/i);
+  assert.doesNotMatch(html, /<script[^>]*\btype\s*=\s*["']module/i);
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy = await build({verifyBaseline: true});
+  const original = await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(original));
+  assert.equal(await readFile(result.path,'utf8'), html);
+});
+
+test('core formatters are bundled through esbuild and legacy reference remains untouched', async () => {
+  const modern = await build();
+  const html = await readFile(modern.path,'utf8');
+  assert.match(html, /CourtsideCoreUtils/);
+  assert.match(html, /const \{ fmtDate, dateFromString, today, safe, safeLogo \} = CourtsideCoreUtils/);
+  assert.equal((html.match(/<script>/g)||[]).length,1);
+  assert.doesNotMatch(html, /<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html, /<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html);
+});
+
+test('ESPN scheduler is bundled as one private instance while the frozen legacy build remains exact', async () => {
+  const modern = await build();
+  const html = await readFile(modern.path,'utf8');
+  assert.match(html,/CourtsideEspnScheduler/);
+  assert.match(html,/CourtsideEspnScheduler\.createEspnScheduler\(\{/);
+  assert.doesNotMatch(html,/<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html,/<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html,'Legacy proof cannot overwrite the modern artifact');
+});
+
+test('Chunk 02 bundles five Settings/release-history modules without runtime imports or changing legacy HTML',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  for(const id of ['CourtsideSettingsPreferences','CourtsideSettingsShortcut','CourtsideSettingsDialog','CourtsideSettingsInitialization','CourtsideWhatsNewReleases'])
+    assert.ok(html.includes(id),`Missing ${id} in browser script`);
+  assert.match(html,/CourtsideSettingsDialog\.createSettingsDialog/);
+  assert.match(html,/CourtsideSettingsPreferences\.createSettingsPreferences/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html,/<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html,'Legacy verification must not overwrite modern build');
+});
+
+test('Chunk 06 bundles Viewer presentation/navigation but keeps original classic-script positions',async()=>{
+  const modular=await build();
+  const html=await readFile(modular.path,'utf8');
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+  for(const [name,path] of [
+    ['CourtsideViewerTitle','src/features/viewer/title.js'],
+    ['CourtsideViewerControls','src/features/viewer/controls.js'],
+    ['CourtsideViewerKeyboard','src/features/viewer/keyboard.js'],
+    ['CourtsideTickerClicks','src/features/ticker/clicks.js'],
+    ['CourtsideMainNavigation','src/core/main-navigation.js']
+  ]){
+    assert.match(html,new RegExp(name));
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(name));
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.ok(frozen.length>100);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+});
+
+test('Chunk 07 Viewer controller is a compiled module with unchanged legacy proof',async()=>{
+  const generated=await build();
+  const html=await readFile(generated.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/viewer/controller.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/viewer/controller.legacy.js'),'utf8');
+  const module=await readFile(join(root,'src/features/viewer/controller.module.mjs'),'utf8');
+  for(const fn of ["updateLiveGamePicker","availableSlotGames","paintPlayer","paintViewer","setActiveTile","setViewerLayout","changeViewerGame","changeViewerSource","lookupViewerGame","openViewer","closeViewer","refreshViewerGameList"]){
+    assert.match(frozen,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(module,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideViewerController\.createViewerController/);
+  assert.match(html,/CourtsideViewerController/);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 08 ticker is an isolated compiled module with unchanged legacy source',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/ticker/controller.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/ticker/controller.legacy.js'),'utf8');
+  const factory=await readFile(join(root,'src/features/ticker/controller.module.mjs'),'utf8');
+  for(const fn of ["formatTickerGame","tickerDispose","tickerNormalize","tickerEnsureCopies","tickerPause","tickerInitialize","tickerFrameStep","paintTicker","renderTickers"]){
+    assert.match(frozen,new RegExp('function '+fn+'\\('));
+    assert.match(factory,new RegExp('function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideTickerController\.createTickerController/);
+  assert.match(html,/CourtsideTickerController/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 09 bundles scoreboard renderer, card controls and navigation at classic-script positions',async()=>{
+  const generated=await build();
+  const html=await readFile(generated.path,'utf8');
+  for(const [global,path] of [["CourtsideScoreboardRender","src/features/scoreboard/render.js"],["CourtsideScoreboardCardControls","src/features/scoreboard/card-controls.js"],["CourtsideScoreboardNavigation","src/features/scoreboard/navigation.js"]]){
+    assert.match(html,new RegExp(global));
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(global));
+    const legacy=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.ok(legacy.length>400);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+});
+
+test('Chunk 10 scoreboard data is a real module, with phase 4H and frozen baseline sources preserved',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/scoreboard/data.js'),'utf8');
+  const before=await readFile(join(root,'src/features/scoreboard/data.pre-module.js'),'utf8');
+  const orig=await readFile(join(root,'src/features/scoreboard/data.legacy.js'),'utf8');
+  const module=await readFile(join(root,'src/features/scoreboard/data.module.mjs'),'utf8');
+  for(const fn of ["classify","parseGames","updateStatus","fetchScores","changeDay","selectDay"]){
+    assert.match(before,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(orig,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(module,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideScoreboardData\.createScoreboardData/);
+  assert.match(html,/CourtsideScoreboardData/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  assert.match(before,/scoreRequestStatus\.complete/);
+  assert.match(orig,/espnPoll\.scoreFailures\+\+/);
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+});
+
+test('Chunk 11 box score, charts and Game Center renderer compile in one classic script',async()=>{
+  const dist=await build(),html=await readFile(dist.path,'utf8');
+  for(const [name,global] of [["box-score","CourtsideGameCenterBoxScore"],["charts","CourtsideGameCenterCharts"],["render","CourtsideGameCenterRender"]]){
+    const adapter=await readFile(join(root,'src/features/game-center',name+'.js'),'utf8');
+    const frozen=await readFile(join(root,'src/features/game-center',name+'.legacy.js'),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));assert.ok(frozen.length>1200);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 12 bundles Game Center summary, controller, and handlers into classic inline output',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,name] of [["src/api/espn/game-summary.js","CourtsideEspnGameSummary"],["src/features/game-center/controller.js","CourtsideGameCenterController"],["src/features/game-center/handlers.js","CourtsideGameCenterHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(name));assert.match(html,new RegExp(name));
+    assert.ok(frozen.length>1000);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 12 retains hoisted Game Center callbacks needed by earlier refresh policy',async()=>{
+  const controller=await readFile(join(root,'src/features/game-center/controller.js'),'utf8');
+  const summary=await readFile(join(root,'src/api/espn/game-summary.js'),'utf8');
+  assert.match(controller,/function updateStatsSidebar\(\.\.\.args\)/);
+  assert.match(controller,/function setStatsTab\(\.\.\.args\)/);
+  assert.match(summary,/function fetchGameSummary\(\.\.\.args\)/);
+  const policy=await readFile(join(root,'src/api/espn/refresh-policy.js'),'utf8');
+  assert.match(policy,/updateStatsSidebar/);
+  assert.match(controller,/CourtsideGameCenterController\.createGameCenterController/);
+});
+
+test('Chunk 13 standings, team profiles and team handlers build as standalone IIFEs with frozen baselines',async()=>{
+  const built=await build(),html=await readFile(built.path,'utf8');
+  for(const [path,global] of [["src/features/standings/standings.js","CourtsideStandings"],["src/features/team-profile/profile.js","CourtsideTeamProfile"],["src/features/team-profile/handlers.js","CourtsideTeamProfileHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));
+    assert.ok(frozen.length>500);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 14 player profile data, dialog and handlers compile to one classic script',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,global] of [["src/features/player-profile/data.js","CourtsidePlayerProfileData"],["src/features/player-profile/dialog.js","CourtsidePlayerProfileDialog"],["src/features/player-profile/handlers.js","CourtsidePlayerProfileHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(global));
+    assert.match(html,new RegExp(global));
+  }
+  const current=await readFile(join(root,'src/features/player-profile/dialog.pre-module.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/player-profile/dialog.legacy.js'),'utf8');
+  assert.match(current,/gameStore\.navigateToDate\(day\)/);
+  assert.doesNotMatch(frozen,/gameStore\.navigateToDate\(day\)/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
+
+test('Chunk 15 League Leaders modules complete all 47 fragments as one compiled classic script',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,global] of [["src/features/league-leaders/data.js","CourtsideLeagueLeadersData"],["src/features/league-leaders/render.js","CourtsideLeagueLeadersRender"],["src/features/league-leaders/handlers.js","CourtsideLeagueLeadersHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const legacy=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));assert.ok(legacy.length>1000);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});

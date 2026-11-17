@@ -1,0 +1,1 @@
+  const $=CourtsideDom.createDomLookup(document);
