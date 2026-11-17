@@ -21,7 +21,8 @@ with sync_playwright() as pw:
   page.locator('#csSettingsTabWhatsnew').click()
   assert page.locator('#whatsNewVersion option').count()==18
   assert page.locator('#whatsNewVersion').input_value()=='1.7.0'
-  assert 'Modular Architecture' in page.locator('#whatsNewDetails').inner_text()
+  details=page.locator('#whatsNewDetails').text_content() or ''
+  assert 'Modular Architecture' in details,repr(details[:250])
   page.locator('#whatsNewOlder').click()
   assert page.locator('#whatsNewVersion').input_value()=='1.6.1'
   page.locator('#whatsNewOlder').click()
