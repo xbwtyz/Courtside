@@ -90,3 +90,16 @@ test('Phase 3B ESPN, scoreboard and ticker fragments have exactly one insertion 
   const output=await readFile(result.path,'utf8');
   for (const [name] of paths) assert.ok(!output.includes(`/*__COURTSIDE_${name}__*/`));
 });
+
+
+test('Phase 3C stage 1 feature files reconstruct at unique marker positions', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['GAME_CENTER_BOX_SCORE', 'src/features/game-center/box-score.js'], ['GAME_CENTER_CHARTS', 'src/features/game-center/charts.js'], ['GAME_CENTER_RENDER', 'src/features/game-center/render.js'], ['GAME_CENTER_CONTROLLER', 'src/features/game-center/controller.js'], ['GAME_CENTER_HANDLERS', 'src/features/game-center/handlers.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
