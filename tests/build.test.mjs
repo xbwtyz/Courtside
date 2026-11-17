@@ -389,3 +389,15 @@ test('Chunk 10 scoreboard data is a real module, with phase 4H and frozen baseli
   const legacy=await build({verifyBaseline:true});
   assert.equal(legacy.sha256,expectedSha256);
 });
+
+test('Chunk 11 box score, charts and Game Center renderer compile in one classic script',async()=>{
+  const dist=await build(),html=await readFile(dist.path,'utf8');
+  for(const [name,global] of [["box-score","CourtsideGameCenterBoxScore"],["charts","CourtsideGameCenterCharts"],["render","CourtsideGameCenterRender"]]){
+    const adapter=await readFile(join(root,'src/features/game-center',name+'.js'),'utf8');
+    const frozen=await readFile(join(root,'src/features/game-center',name+'.legacy.js'),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));assert.ok(frozen.length>1200);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});
