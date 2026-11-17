@@ -1,0 +1,4 @@
+# Generated from the modular source; do not commit build outputs.
+/dist/
+/node_modules/
+.DS_Store

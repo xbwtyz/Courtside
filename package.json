@@ -1,0 +1,16 @@
+{
+  "name": "courtside",
+  "private": true,
+  "version": "1.7.0-dev",
+  "type": "module",
+  "description": "Development source for the standalone Courtside NBA HTML application",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify:baseline": "node scripts/build.mjs --verify-baseline",
+    "test": "node --test tests/*.test.mjs",
+    "check:syntax": "node --check src/scripts/app.js && node --check scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
