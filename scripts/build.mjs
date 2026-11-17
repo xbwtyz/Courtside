@@ -11,6 +11,21 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/api/streams/config.js', {
+    entry: join(root, 'src/api/streams/config.entry.mjs'),
+    name: 'CourtsideStreamConfig',
+    legacy: 'src/api/streams/config.legacy.js',
+  }],
+  ['src/api/streams/requests.js', {
+    entry: join(root, 'src/api/streams/requests.entry.mjs'),
+    name: 'CourtsideStreamRequests',
+    legacy: 'src/api/streams/requests.legacy.js',
+  }],
+  ['src/api/streams/matching.js', {
+    entry: join(root, 'src/api/streams/matching.entry.mjs'),
+    name: 'CourtsideStreamMatching',
+    legacy: 'src/api/streams/matching.legacy.js',
+  }],
   ['src/features/live-alerts/alerts.js', {
     entry: join(root, 'src/features/live-alerts/alerts.entry.mjs'),
     name: 'CourtsideLiveAlerts',
