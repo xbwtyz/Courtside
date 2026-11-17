@@ -258,3 +258,22 @@ test('ESPN scheduler is bundled as one private instance while the frozen legacy 
   assert.ok((await readFile(legacy.path)).equals(baseline));
   assert.equal(await readFile(modern.path,'utf8'),html,'Legacy proof cannot overwrite the modern artifact');
 });
+
+test('Chunk 02 bundles five Settings/release-history modules without runtime imports or changing legacy HTML',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  for(const id of ['CourtsideSettingsPreferences','CourtsideSettingsShortcut','CourtsideSettingsDialog','CourtsideSettingsInitialization','CourtsideWhatsNewReleases'])
+    assert.ok(html.includes(id),`Missing ${id} in browser script`);
+  assert.match(html,/CourtsideSettingsDialog\.createSettingsDialog/);
+  assert.match(html,/CourtsideSettingsPreferences\.createSettingsPreferences/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html,/<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html,'Legacy verification must not overwrite modern build');
+});

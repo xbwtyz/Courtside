@@ -86,7 +86,7 @@ test('ESPN request queue prioritizes live requests, respects cooldown, and limit
 });
 
 test('saved preferences preserve valid options and reject unsafe or obsolete values', async () => {
-  const code=await source('src/features/settings/preferences.js');
+  const code=await source('src/features/settings/preferences.legacy.js');
   let current=JSON.stringify({ defaultLayout:4,landing:'leaders',alertsEnabled:true,alertsTeams:['2','2','abc','5'],tickerSpeed:'invalid',leadersRows:999 });
   let writes=[];
   const status={textContent:''};

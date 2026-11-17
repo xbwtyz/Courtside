@@ -7,7 +7,7 @@ import { createContext, runInContext } from 'node:vm';
 import { createWhatsNew } from '../src/features/whats-new/module.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const originalReleases = await readFile(join(root, 'src/features/whats-new/releases.js'), 'utf8');
+const originalReleases = await readFile(join(root, 'src/features/whats-new/releases.legacy.js'), 'utf8');
 const originalController = await readFile(join(root, 'src/features/whats-new/controller.legacy.js'), 'utf8');
 const { versions, release } = (() => {
   const context = createContext({});

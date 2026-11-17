@@ -11,6 +11,31 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/features/settings/preferences.js', {
+    entry: join(root, 'src/features/settings/preferences.entry.mjs'),
+    name: 'CourtsideSettingsPreferences',
+    legacy: 'src/features/settings/preferences.legacy.js',
+  }],
+  ['src/features/settings/shortcut.js', {
+    entry: join(root, 'src/features/settings/shortcut.entry.mjs'),
+    name: 'CourtsideSettingsShortcut',
+    legacy: 'src/features/settings/shortcut.legacy.js',
+  }],
+  ['src/features/settings/dialog.js', {
+    entry: join(root, 'src/features/settings/dialog.entry.mjs'),
+    name: 'CourtsideSettingsDialog',
+    legacy: 'src/features/settings/dialog.legacy.js',
+  }],
+  ['src/features/settings/initialization.js', {
+    entry: join(root, 'src/features/settings/initialization.entry.mjs'),
+    name: 'CourtsideSettingsInitialization',
+    legacy: 'src/features/settings/initialization.legacy.js',
+  }],
+  ['src/features/whats-new/releases.js', {
+    entry: join(root, 'src/features/whats-new/releases.entry.mjs'),
+    name: 'CourtsideWhatsNewReleases',
+    legacy: 'src/features/whats-new/releases.legacy.js',
+  }],
   ['src/api/espn/endpoint.js', {
     entry: join(root, 'src/api/espn/endpoint.entry.mjs'),
     name: 'CourtsideEspnEndpoints',
