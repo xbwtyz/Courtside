@@ -6,11 +6,11 @@ Courtside brings the scoreboard, the game, and the numbers into the same browser
 
 The interface runs entirely in your browser using HTML, CSS, vanilla JavaScript, and native SVG charts. There is no build step, backend, package installation, or API key to configure.
 
-> Download the HTML file and open it in your browser. An internet connection is required for scores, statistics, and external players.
+> **Latest stable release: [Courtside v1.7.0](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0).** [Download the standalone courtside.html](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html) and open it in your browser. An internet connection is required for scores, statistics, and external players.
 
 ## Quick start
 
-1. Download the project's `.html` file. If GitHub displays its source, use **Download raw file** to save it.
+1. Download **[courtside.html from the latest release](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html)**. No software installation or build process is needed.
 2. Open the downloaded file in a modern browser with JavaScript enabled. Keep the `.html` extension.
 3. Use the date picker, team search, or **Live only** filter to find a matchup.
 4. Click a game card or its **Watch** button to open the viewer.
@@ -136,7 +136,7 @@ Hosting the file makes the interface available online. External API access and e
 
 ## Technical notes and privacy
 
-The application consists of one HTML file containing its styles, application logic, and SVG rendering. The delivered HTML has no application backend or runtime build tooling, and uses no external JavaScript chart library. Developers of the 1.7 source branch use esbuild to produce this standalone artifact. Google Fonts and ESPN-hosted team logos are loaded externally.
+The application consists of one HTML file containing its styles, application logic, and SVG rendering. The delivered HTML has no application backend or runtime build tooling, and uses no external JavaScript chart library. Developers use esbuild to produce this standalone artifact. Google Fonts and ESPN-hosted team logos are loaded externally.
 
 The browser contacts ESPN, stream-index services, and embedded-player hosts directly. External players may make additional requests and use their own cookies or tracking. Running the app from a local file does not make those external services private or offline.
 
@@ -144,7 +144,7 @@ The scoreboard refresh interval is saved in browser `localStorage` under `courts
 
 ## Development: Courtside 1.7 modular source
 
-> The **downloaded HTML requires no installation, build tooling or server**. The 1.7 source branch uses a build-time toolchain to preserve that single-file delivery format. These instructions apply to `refactor/modular-1.7`, not the current published `main` branch.
+> The **downloaded HTML requires no installation, build tooling or server**. The 1.7 source on `main` uses a build-time toolchain to preserve that single-file delivery format. These steps are for contributors, not end users.
 
 Use **Node.js 22** and the checked-in npm lockfile:
 
@@ -161,9 +161,9 @@ npm run release:verify
 
 The 47 original script fragments each have one build-time entry, one compiled IIFE in the final classic script, and a frozen `.legacy.js` reference. Run `npm run test:architecture` to confirm the source inventory, shared state ownership, deterministic release-candidate hash and the exact 1.6.1 baseline. Chromium browser tests also require Python 3 with Playwright and its Chromium browser installed (see `.github/workflows/ci.yml`).
 
-**Verified v1.7.0 candidate:** 499,291 bytes, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526` (see the release preparation report). **Development output:** `dist/courtside.html`. **1.6.1 reconstruction:** `dist/courtside-legacy-proof.html`. Neither file needs to be committed. The original 1.6.1 SHA-256 is `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
+**Published v1.7.0 artifact:** 499,291 bytes, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526` (see the release preparation report). **Development output:** `dist/courtside.html`. **1.6.1 reconstruction:** `dist/courtside-legacy-proof.html`. Neither file needs to be committed. The original 1.6.1 SHA-256 is `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
 
-**Courtside 1.7.0 is in release preparation on the refactor branch, not published to `main`.** To prepare the byte-identical single-file distribution after successful regression tests, run `npm run release:prepare`; to assert that committed `courtside.html` still equals a fresh build, run `npm run release:verify`. The build also supports frozen 1.6.1 output through its immutable `src/index.legacy.html` template. Human Firefox and live-provider smoke checks have been reported as passed; the full 104-case manual checklist remains separate. Never merge, tag, or publish a GitHub Release without explicit approval.
+**Courtside v1.7.0 was released from the tested merge commit [`a79aada`](https://github.com/xbwtyz/Courtside/commit/a79aada8b743e735fa83d33e937796070b08a7a7).** The [GitHub Release](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0) contains the verified standalone HTML. To prepare an identical local distribution, run `npm run release:prepare`; to assert that committed `courtside.html` still equals a fresh build, run `npm run release:verify`. The build also supports frozen 1.6.1 output through its immutable `src/index.legacy.html` template. Six owner-run Firefox smoke checks passed; the full historical manual regression checklist remains separate. Future release tags and distribution changes require separate approval.
 
 ## Feedback
 
