@@ -312,3 +312,22 @@ test('Chunk 06 bundles Viewer presentation/navigation but keeps original classic
   assert.equal((html.match(/<script\b/gi)||[]).length,1);
   assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
 });
+
+test('Chunk 07 Viewer controller is a compiled module with unchanged legacy proof',async()=>{
+  const generated=await build();
+  const html=await readFile(generated.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/viewer/controller.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/viewer/controller.legacy.js'),'utf8');
+  const module=await readFile(join(root,'src/features/viewer/controller.module.mjs'),'utf8');
+  for(const fn of ["updateLiveGamePicker","availableSlotGames","paintPlayer","paintViewer","setActiveTile","setViewerLayout","changeViewerGame","changeViewerSource","lookupViewerGame","openViewer","closeViewer","refreshViewerGameList"]){
+    assert.match(frozen,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(module,new RegExp('(?:async )?function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideViewerController\.createViewerController/);
+  assert.match(html,/CourtsideViewerController/);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
