@@ -331,3 +331,22 @@ test('Chunk 07 Viewer controller is a compiled module with unchanged legacy proo
   const proof=await build({verifyBaseline:true});
   assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 08 ticker is an isolated compiled module with unchanged legacy source',async()=>{
+  const modern=await build();
+  const html=await readFile(modern.path,'utf8');
+  const adapter=await readFile(join(root,'src/features/ticker/controller.js'),'utf8');
+  const frozen=await readFile(join(root,'src/features/ticker/controller.legacy.js'),'utf8');
+  const factory=await readFile(join(root,'src/features/ticker/controller.module.mjs'),'utf8');
+  for(const fn of ["formatTickerGame","tickerDispose","tickerNormalize","tickerEnsureCopies","tickerPause","tickerInitialize","tickerFrameStep","paintTicker","renderTickers"]){
+    assert.match(frozen,new RegExp('function '+fn+'\\('));
+    assert.match(factory,new RegExp('function '+fn+'\\('));
+    assert.match(adapter,new RegExp('\\b'+fn+'\\b'));
+  }
+  assert.match(adapter,/CourtsideTickerController\.createTickerController/);
+  assert.match(html,/CourtsideTickerController/);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});
