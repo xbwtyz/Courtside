@@ -124,7 +124,7 @@ test('Live Alerts registers its existing Settings handlers without network or ex
     handlers.get('settingsAlertsScope:change')({target:{value:'selected'}});
     assert.equal(f.prefs.alertsScope,'selected');
     handlers.get('alertsTeamChoices:change')({target:{closest:()=>({checked:true,dataset:{alertTeam:'2'}})}});
-    assert.deepEqual(f.prefs.alertsTeams,['2']);
+    assert.deepEqual(copy(f.prefs.alertsTeams),['2']);
     handlers.get('settingsAlertsVolume:change')({target:{value:'high'}});
     assert.equal(f.prefs.alertsVolume,'high');
     assert.equal(f.saved.length,4);
