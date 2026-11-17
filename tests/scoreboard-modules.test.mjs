@@ -109,14 +109,13 @@ function callbacks(f){
   at('scoreboard','click',event(button('article.game[data-game-id]',{gameId:'401000002'})));
   const onlyButton=closest({'a,button,input,select,textarea':{}});
   at('scoreboard','click',event(onlyButton));
-  const card={dataset:{gameId:'401000002'}};
-  const keyEvent=event({closest:()=>card},'Enter');
+  const card={dataset:{gameId:'401000002'},closest:selector=>selector==='article.game[data-game-id]'?card:null};
+  const keyEvent=event(card,'Enter');
   at('scoreboard','keydown',keyEvent);
-  const space=event({closest:()=>card},' ');
+  const space=event(card,' ');
   at('scoreboard','keydown',space);
   const rowTarget=card;
   const invalid=event({closest:()=>card},'Enter');
-  invalid.target=card;
   at('scoreboard','keydown',invalid);
   at('prevDay','click',event({}));
   at('nextDay','click',event({}));
