@@ -17,6 +17,10 @@ const featureFragments = [
   ['/*__COURTSIDE_ESPN_REQUEST_SCHEDULER__*/', 'src/api/espn/request-scheduler.js'],
   ['/*__COURTSIDE_ESPN_REFRESH_POLICY__*/', 'src/api/espn/refresh-policy.js'],
   ['/*__COURTSIDE_ESPN_GAME_SUMMARY__*/', 'src/api/espn/game-summary.js'],
+  ['/*__COURTSIDE_SCOREBOARD_DATA__*/', 'src/features/scoreboard/data.js'],
+  ['/*__COURTSIDE_SCOREBOARD_RENDER__*/', 'src/features/scoreboard/render.js'],
+  ['/*__COURTSIDE_SCOREBOARD_CARD_CONTROLS__*/', 'src/features/scoreboard/card-controls.js'],
+  ['/*__COURTSIDE_SCOREBOARD_NAVIGATION__*/', 'src/features/scoreboard/navigation.js'],
   ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js'],
 ];
 
