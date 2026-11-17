@@ -21,7 +21,7 @@ JS=r"""async () => {
   iframe.setAttribute('src',src);
   const observer=new MutationObserver(()=>{});
   observer.observe(iframe,{attributes:true,attributeFilter:['src']});
-  const originalFetch=window.fetch;
+  const originalFetch=window.fetch,previousCombined=combinedSourcesForId;
   const requests=[],states=[];
   const snap=label=>states.push({label,tab:viewerState.statsTab,statsOpen:viewerState.statsOpen,
     gameId:viewerState.gameId,cacheSize:viewerState.statsCache.size,
@@ -33,7 +33,13 @@ JS=r"""async () => {
     requests:requests.length,src:iframe.getAttribute('src'),
     iframeMutations:observer.takeRecords().length});
   try{
+    combinedSourcesForId=()=>[{name:'Mock source',url:src}];
     state.games=[game];
+    viewerState.layout=1;viewerState.activeTile=0;
+    viewerState.liveGames=[];viewerState.statsDisplayKey=null;
+    viewerState.slots=Array.from({length:4},()=>({gameId:null,sourceUrl:null,sources:[]}));
+    viewerState.slots[0].gameId=game.id;
+    viewerState.slots[0].sourceUrl=src;
     viewerState.gameId=game.id;
     viewerState.statsOpen=true;
     viewerState.statsTab='box';
@@ -72,7 +78,7 @@ JS=r"""async () => {
     snap('hidden-no-refresh');
     return {states,requests,iframeStable:states.every(s=>s.src===src&&s.iframeMutations===0)};
   }finally{
-    window.fetch=originalFetch;observer.disconnect();
+    window.fetch=originalFetch;combinedSourcesForId=previousCombined;observer.disconnect();
   }
 }"""
 def inspect(browser,path):
