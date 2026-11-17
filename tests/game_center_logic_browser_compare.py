@@ -23,7 +23,7 @@ JS=r"""async () => {
   observer.observe(iframe,{attributes:true,attributeFilter:['src']});
   const originalFetch=window.fetch;
   const requests=[],states=[];
-  const snap=label=>({label,tab:viewerState.statsTab,statsOpen:viewerState.statsOpen,
+  const snap=label=>states.push({label,tab:viewerState.statsTab,statsOpen:viewerState.statsOpen,
     gameId:viewerState.gameId,cacheSize:viewerState.statsCache.size,
     pending:viewerState.statsPending.size,statsError:viewerState.statsError,
     statsSeq:viewerState.statsSeq,boxWide:viewerState.boxWide,
