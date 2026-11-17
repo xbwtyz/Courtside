@@ -309,6 +309,6 @@ test('Chunk 06 bundles Viewer presentation/navigation but keeps original classic
     const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
     assert.ok(frozen.length>100);
   }
-  assert.equal((html.match(/<script\\b/gi)||[]).length,1);
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
   assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
 });
