@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {createContext,runInContext} from 'node:vm';
 import {createGameStore} from '../src/core/game-store.module.mjs';
+import {createScoreRequestStatus} from '../src/api/espn/config.module.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const source=path=>readFile(join(root,path),'utf8');
@@ -87,9 +88,10 @@ function makeScoreboard(){
   const gameStore=createGameStore({date:'2026-11-16',defaultLiveOnly:false});
   const state=gameStore.state;
   const espnPoll={sharedUntil:0,scoreFailures:0};
+  const scoreRequestStatus=createScoreRequestStatus({state,espnPoll,AbortController,Date,getScoresRefreshMs:()=>10000,getBackoff:()=>30000});
   const pending=[],calls=[], renders=[];
   const ctx=createContext({
-    state,gameStore,espnPoll,console,Date,Promise,AbortController,DOMException,setTimeout,clearTimeout,
+    state,gameStore,scoreRequestStatus,espnPoll,console,Date,Promise,AbortController,DOMException,setTimeout,clearTimeout,
     API:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
     auditESPNJob:async (_meta,job)=>job(()=>{}),
     fetch:(url,options)=>{calls.push({url,options});const gate=deferred();pending.push(gate);return gate.promise;},
@@ -151,7 +153,7 @@ test('scoreboard avoids duplicate same-day requests and blocks requests during r
 });
 
 test('adaptive polling skips background tabs, respects cooldown, and does not refetch on viewer repaint',async()=>{
-  const code=(await source('src/core/polling-bootstrap.js')).split('  document.addEventListener(\'visibilitychange\'')[0];
+  const code=(await source('src/core/polling-bootstrap.legacy.js')).split('  document.addEventListener(\'visibilitychange\'')[0];
   const events={scores:0,stats:0,standings:0,status:0};
   const doc={hidden:true};let viewerHidden=true;
   const context=createContext({

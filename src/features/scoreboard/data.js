@@ -28,16 +28,15 @@
     }
     if(Date.now()<espnPoll.sharedUntil){
       alertsResetBaseline();
-      state.nextAt=Math.max(state.nextAt,espnPoll.sharedUntil);
-      if(force){state.error='ESPN has temporarily rate-limited requests. Waiting before retrying.';state.firstLoaded=true;render();}
+      scoreRequestStatus.rateLimited(force);
+      if(force)render();
       updateStatus();
       return;
     }
     if(!force&&!Number.isFinite(state.nextAt))return;
-    const seq=++state.requestSeq;
-    const controller=new AbortController();state.controller=controller;
+    const {seq,controller}=scoreRequestStatus.begin();
     let timer;
-    state.loading=true;state.error='';state.fetchDate=state.date;updateStatus();
+    updateStatus();
     const requested=state.date;
     let scoreResponse=null;
     try{
@@ -57,27 +56,20 @@
       dataLogObserve(json,`scores:${requested}`,()=>dataLogScoreRecords(state.games));
       try{alertsObserveScoreboard(state.games,requested);}catch(error){console.warn('Courtside alert comparison skipped:',error);}
       seedTeamDirectoryFromScores();
-      state.lastUpdated=new Date();state.firstLoaded=true;state.error='';
-      espnPoll.scoreFailures=0;
+      scoreRequestStatus.succeeded();
       render();
       renderTickers();
       if(!$('viewer').hidden){updateLiveGamePicker();paintViewer();}
     }catch(err){
       if(seq!==state.requestSeq)return;
       if(scoreResponse)dataLogInvalid(scoreResponse,err);
-      espnPoll.scoreFailures++;
+      scoreRequestStatus.incrementFailure();
       alertsResetBaseline();
-      state.error=err.name==='AbortError'?'The request timed out. Please retry.':err.message;
-      state.firstLoaded=true;
+      scoreRequestStatus.recordError(err);
       render();
     }finally{
       clearTimeout(timer);
-      if(seq===state.requestSeq){
-        state.loading=false;state.controller=null;state.fetchDate=null;
-        state.nextAt=Number.isFinite(scoresRefreshMs())?Date.now()+(state.error?exponentialBackoff(espnPoll.scoreFailures):scoresRefreshMs()):Infinity;
-        state.nextAt=Math.max(state.nextAt,espnPoll.sharedUntil);
-        updateStatus();
-      }
+      if(scoreRequestStatus.complete(seq))updateStatus();
     }
   }
   function changeDay(offset){const d=dateFromString(state.date);d.setDate(d.getDate()+offset);selectDay(fmtDate(d));}

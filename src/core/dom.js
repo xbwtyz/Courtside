@@ -1,2 +1,1 @@
-  const $ = id => document.getElementById(id);
-
+  const $=CourtsideDom.createDomLookup(document);

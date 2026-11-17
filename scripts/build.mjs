@@ -11,6 +11,31 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/api/espn/endpoint.js', {
+    entry: join(root, 'src/api/espn/endpoint.entry.mjs'),
+    name: 'CourtsideEspnEndpoints',
+    legacy: 'src/api/espn/endpoint.legacy.js',
+  }],
+  ['src/core/dom.js', {
+    entry: join(root, 'src/core/dom.entry.mjs'),
+    name: 'CourtsideDom',
+    legacy: 'src/core/dom.legacy.js',
+  }],
+  ['src/api/espn/config.js', {
+    entry: join(root, 'src/api/espn/config.entry.mjs'),
+    name: 'CourtsideEspnConfig',
+    legacy: 'src/api/espn/config.legacy.js',
+  }],
+  ['src/api/espn/refresh-policy.js', {
+    entry: join(root, 'src/api/espn/refresh-policy.entry.mjs'),
+    name: 'CourtsideEspnRefreshPolicy',
+    legacy: 'src/api/espn/refresh-policy.legacy.js',
+  }],
+  ['src/core/polling-bootstrap.js', {
+    entry: join(root, 'src/core/polling.entry.mjs'),
+    name: 'CourtsidePollCoordinator',
+    legacy: 'src/core/polling-bootstrap.legacy.js',
+  }],
   ['src/core/state.js', {
     entry: join(root, 'src/core/game-store.entry.mjs'),
     name: 'CourtsideGameStore',

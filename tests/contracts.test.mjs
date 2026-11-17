@@ -33,7 +33,7 @@ test('scoreboard normalization identifies pre/live/final without mutating ESPN i
 
 test('refresh policy respects 10s/15s/60s and stops polling historical final games', async () => {
   const { ctx, scoresRefreshMs, statsRefreshMs } = runFragment(
-    (await source('src/api/espn/config.js')) + '\n' + (await source('src/api/espn/refresh-policy.js')),
+    (await source('src/api/espn/config.legacy.js')) + '\n' + (await source('src/api/espn/refresh-policy.legacy.js')),
     {
       state: { date:'2026-11-16',games: [],lastUpdated: null },
       viewerState:{liveGames:[],statsCache:new Map(),statsOpen:false,gameId:null,statsPending:new Map()},
