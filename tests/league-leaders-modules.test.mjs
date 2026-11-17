@@ -118,7 +118,7 @@ test('League Leaders numeric parsing, season/page validation, ties, filters and 
  assert.equal(after.numeric[1],3300);
  assert.equal(after.numeric[2],42);
  assert.equal(after.bad.length,4);
- assert.deepEqual(after.initial.ranked.map(x=>x[1]),[1,1,null]);
+ assert.deepEqual(after.initial.ranked.map(x=>x[1]),[1,1]); // Third player fails minimum-games filter.
  assert.equal(after.searched.length,1);
  assert.equal(after.volume.on,true);
  assert.equal(after.category.category,'rebounding');
