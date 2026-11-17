@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {createContext,runInContext} from 'node:vm';
+import {createGameStore} from '../src/core/game-store.module.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const source=path=>readFile(join(root,path),'utf8');
@@ -83,11 +84,12 @@ test('Game Center summary failures clear pending requests, apply backoff and per
 });
 
 function makeScoreboard(){
-  const state={date:'2026-11-16',games:[],expanded:new Set(),loading:false,firstLoaded:false,lastUpdated:null,error:'',requestSeq:0,fetchDate:null,controller:null,nextAt:0};
+  const gameStore=createGameStore({date:'2026-11-16',defaultLiveOnly:false});
+  const state=gameStore.state;
   const espnPoll={sharedUntil:0,scoreFailures:0};
   const pending=[],calls=[], renders=[];
   const ctx=createContext({
-    state,espnPoll,console,Date,Promise,AbortController,DOMException,setTimeout,clearTimeout,
+    state,gameStore,espnPoll,console,Date,Promise,AbortController,DOMException,setTimeout,clearTimeout,
     API:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
     auditESPNJob:async (_meta,job)=>job(()=>{}),
     fetch:(url,options)=>{calls.push({url,options});const gate=deferred();pending.push(gate);return gate.promise;},

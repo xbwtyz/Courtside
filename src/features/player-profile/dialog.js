@@ -70,7 +70,7 @@
     closePlayerProfile(false);
     if(fromTeam){$('teamProfileModal').hidden=false;closeTeamProfile();}
     setMainView('scores');
-    if(state.date!==day){state.date=day;$('datePicker').value=day;state.nextAt=0;await fetchScores(true);}
+    if(state.date!==day){gameStore.navigateToDate(day);$('datePicker').value=day;await fetchScores(true);}
     if(!state.games.some(g=>String(g.id)===gameId)){
       state.error='That game could not be found in ESPN’s selected-day scoreboard. Try its ESPN Gamecast.';
       render();return;

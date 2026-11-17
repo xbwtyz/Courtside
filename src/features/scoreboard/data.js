@@ -53,7 +53,7 @@
       });
       if(seq!==state.requestSeq)return;
       scoreResponse=json;
-      state.games=parseGames(json);
+      gameStore.replaceGames(parseGames(json));
       dataLogObserve(json,`scores:${requested}`,()=>dataLogScoreRecords(state.games));
       try{alertsObserveScoreboard(state.games,requested);}catch(error){console.warn('Courtside alert comparison skipped:',error);}
       seedTeamDirectoryFromScores();
@@ -81,4 +81,4 @@
     }
   }
   function changeDay(offset){const d=dateFromString(state.date);d.setDate(d.getDate()+offset);selectDay(fmtDate(d));}
-  function selectDay(day){if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;alertsResetBaseline();state.date=day;state.games=[];state.expanded.clear();state.error='';state.firstLoaded=false;state.lastUpdated=null;state.nextAt=0;$('datePicker').value=day;render();renderTickers();fetchScores(true);}
+  function selectDay(day){if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;alertsResetBaseline();gameStore.selectDate(day);$('datePicker').value=day;render();renderTickers();fetchScores(true);}

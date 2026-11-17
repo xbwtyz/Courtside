@@ -1,7 +1,6 @@
-  const state = {
-    date:today(), games:[], lastUpdated:null, error:'', loading:false, firstLoaded:false,
-    liveOnly:settingsPrefs.defaultLiveOnly, query:'', nextAt:0, expanded:new Set(), requestSeq:0, controller:null, fetchDate:null
-  };
+  // Central scoreboard game state with an unchanged legacy state view.
+  const gameStore = CourtsideGameStore.createGameStore({date:today(), defaultLiveOnly:settingsPrefs.defaultLiveOnly});
+  const state = gameStore.state;
 
   $('datePicker').value = state.date;
   $('liveOnly').checked = state.liveOnly;

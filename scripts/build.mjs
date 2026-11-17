@@ -11,6 +11,11 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/core/state.js', {
+    entry: join(root, 'src/core/game-store.entry.mjs'),
+    name: 'CourtsideGameStore',
+    legacy: 'src/core/state.legacy.js',
+  }],
   ['src/api/espn/request-scheduler.js', {
     entry: join(root, 'src/api/espn/request-scheduler.entry.mjs'),
     name: 'CourtsideEspnScheduler',
@@ -31,6 +36,13 @@ const bundledFeatures = new Map([
     name: 'CourtsideStatGlossary',
     legacy: 'src/features/stat-glossary/glossary.legacy.js',
   }],
+]);
+
+// Legacy byte-parity reconstruction also replaces the three migrated consumers.
+const legacyFragmentOverrides = new Map([
+  ['src/features/scoreboard/data.js', 'src/features/scoreboard/data.legacy.js'],
+  ['src/features/player-profile/dialog.js', 'src/features/player-profile/dialog.legacy.js'],
+  ['src/features/game-center/controller.js', 'src/features/game-center/controller.legacy.js'],
 ]);
 
 async function buildFeatureBundle(feature) {
@@ -123,6 +135,9 @@ export async function build({ verifyBaseline = false } = {}) {
   let compiledJs = js;
   for (const [marker, sourcePath] of featureFragments) {
     let fragment = await readFile(join(root, sourcePath), 'utf8');
+    if (verifyBaseline && legacyFragmentOverrides.has(sourcePath)) {
+      fragment = await readFile(join(root, legacyFragmentOverrides.get(sourcePath)), 'utf8');
+    }
     const feature = bundledFeatures.get(sourcePath);
     if (feature) {
       if (verifyBaseline) {
