@@ -456,3 +456,15 @@ test('Chunk 14 player profile data, dialog and handlers compile to one classic s
   const proof=await build({verifyBaseline:true});
   assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 15 League Leaders modules complete all 47 fragments as one compiled classic script',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,global] of [["src/features/league-leaders/data.js","CourtsideLeagueLeadersData"],["src/features/league-leaders/render.js","CourtsideLeagueLeadersRender"],["src/features/league-leaders/handlers.js","CourtsideLeagueLeadersHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const legacy=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(global));assert.match(html,new RegExp(global));assert.ok(legacy.length>1000);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
+});
