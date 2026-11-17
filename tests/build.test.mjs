@@ -129,3 +129,16 @@ test('Phase 3C stage 3 feature files reconstruct at unique marker positions', as
   const result=await build({verifyBaseline:true});
   assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
 });
+
+
+test('Phase 3D stage 1 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['STREAM_PROVIDERS_CONFIG', 'src/api/streams/config.js'], ['STREAM_PROVIDERS_REQUESTS', 'src/api/streams/requests.js'], ['STREAM_PROVIDERS_MATCHING', 'src/api/streams/matching.js'], ['VIEWER_TITLE', 'src/features/viewer/title.js'], ['VIEWER_CONTROLLER', 'src/features/viewer/controller.js'], ['VIEWER_CONTROLS', 'src/features/viewer/controls.js'], ['VIEWER_KEYBOARD', 'src/features/viewer/keyboard.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
