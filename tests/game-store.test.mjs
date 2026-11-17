@@ -116,7 +116,7 @@ test('game-state migration preserves the exact legacy build and a single inline 
   const modern=await build();const html=await readFile(modern.path,'utf8');
   assert.match(html,/CourtsideGameStore/);
   assert.match(html,/CourtsideGameStore\.createGameStore/);
-  assert.match(html,/gameStore\.replaceGames\(parseGames\(json\)\)/);
+  assert.match(html,/gameStore\.replaceGames\(callParseGames\(json\)\)/);
   assert.match(html,/gameStore\.navigateToDate\(day\)/);
   assert.equal((html.match(/<script\b/gi)||[]).length,1);
   assert.doesNotMatch(html,/<script[^>]+\bsrc\s*=/i);

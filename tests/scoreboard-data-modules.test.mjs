@@ -174,7 +174,7 @@ test('different-date requests cancel older request and prevent stale score/Viewe
   const before=await stale('legacy'),after=await stale('modular');
   assert.deepEqual(after,before);
   assert.deepEqual(after.whilePending.aborted,[true,false]);
-  assert.equal(after.afterStale.events.length,after.afterNew.events.length);
+  for(const label of ['render','viewerPaint','tickers'])assert.equal(after.afterStale.events.filter(e=>e[0]===label).length,after.afterNew.events.filter(e=>e[0]===label).length,'stale reply must not repaint '+label);
   assert.deepEqual(after.afterStale.ids,['401000001','401000002','401000003']);
 });
 async function failure(kind){

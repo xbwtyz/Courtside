@@ -17,7 +17,7 @@ function runFragment(js, globals, names) {
 }
 
 test('scoreboard normalization identifies pre/live/final without mutating ESPN input', async () => {
-  const full = await source('src/features/scoreboard/data.js');
+  const full = await source('src/features/scoreboard/data.pre-module.js');
   const code = full.slice(0, full.indexOf('  function updateStatus()'));
   assert.ok(code.includes('function classify(') && code.includes('function parseGames('), 'expected original source declarations');
   const { parseGames } = runFragment(code, {}, ['parseGames']);
