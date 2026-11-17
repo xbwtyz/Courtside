@@ -415,3 +415,14 @@ test('Chunk 12 bundles Game Center summary, controller, and handlers into classi
   const proof=await build({verifyBaseline:true});
   assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 12 retains hoisted Game Center callbacks needed by earlier refresh policy',async()=>{
+  const controller=await readFile(join(root,'src/features/game-center/controller.js'),'utf8');
+  const summary=await readFile(join(root,'src/api/espn/game-summary.js'),'utf8');
+  assert.match(controller,/function updateStatsSidebar\(\.\.\.args\)/);
+  assert.match(controller,/function setStatsTab\(\.\.\.args\)/);
+  assert.match(summary,/function fetchGameSummary\(\.\.\.args\)/);
+  const policy=await readFile(join(root,'src/api/espn/refresh-policy.js'),'utf8');
+  assert.match(policy,/updateStatsSidebar/);
+  assert.match(controller,/CourtsideGameCenterController\.createGameCenterController/);
+});

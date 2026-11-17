@@ -1,4 +1,4 @@
-  const {fetchGameSummary}=CourtsideEspnGameSummary.createGameSummary({
+  const gameCenterSummaryApi=CourtsideEspnGameSummary.createGameSummary({
     viewerState,statsPoll,espnPoll,SUMMARY_API,Date,AbortController,
     setTimeout,clearTimeout,encodeURIComponent,
     statsNeedsRequest:(...args)=>statsNeedsRequest(...args),
@@ -11,3 +11,5 @@
     dataLogInvalid:(...args)=>dataLogInvalid(...args),
     exponentialBackoff:(...args)=>exponentialBackoff(...args)
   });
+  // Preserve the original hoisted function and reassignment-friendly interface.
+  function fetchGameSummary(...args){return gameCenterSummaryApi.fetchGameSummary(...args);}
