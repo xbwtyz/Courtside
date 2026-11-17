@@ -3,7 +3,7 @@ async function updateStatsSidebar(force=false,{showCache=true}={}){
   const id=viewerState.gameId,token=++viewerState.statsSeq;
   if(!id){$('statsContent').innerHTML='<p class="bs-empty">Choose an NBA game to view player statistics.</p>';return;}
   resetStatsPollFor(id);
-  const game=state.games.find(g=>String(g.id)===id);
+  const game=gameStore.findGame(id);
   const cache=viewerState.statsCache.get(id);
   if(showCache)renderStats(game,cache?.data);
   if(!statsNeedsRequest(id,force))return;

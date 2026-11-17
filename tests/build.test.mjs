@@ -401,3 +401,17 @@ test('Chunk 11 box score, charts and Game Center renderer compile in one classic
   assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
   const proof=await build({verifyBaseline:true});assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 12 bundles Game Center summary, controller, and handlers into classic inline output',async()=>{
+  const modern=await build(),html=await readFile(modern.path,'utf8');
+  for(const [path,name] of [["src/api/espn/game-summary.js","CourtsideEspnGameSummary"],["src/features/game-center/controller.js","CourtsideGameCenterController"],["src/features/game-center/handlers.js","CourtsideGameCenterHandlers"]]){
+    const adapter=await readFile(join(root,path),'utf8');
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.match(adapter,new RegExp(name));assert.match(html,new RegExp(name));
+    assert.ok(frozen.length>1000);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const proof=await build({verifyBaseline:true});
+  assert.equal(proof.sha256,expectedSha256);
+});

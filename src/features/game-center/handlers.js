@@ -1,48 +1,19 @@
-$('statsSidebar').addEventListener('click',event=>{
-  const tab=event.target.closest('button[data-bs-tab]');
-  if(tab){setStatsTab(tab.dataset.bsTab);return;}
-  const chartView=event.target.closest('button[data-cs-view]');
-  if(chartView){setChartView(chartView.dataset.csView);return;}
-  const shot=event.target.closest('[data-cs-shot]');
-  if(shot){inspectShot(shot.dataset.csShot);return;}
-  const team=event.target.closest('button[data-bs-team]');
-  if(team){viewerState.boxTeam=team.dataset.bsTeam;renderStats(state.games.find(g=>String(g.id)===viewerState.gameId),viewerState.statsCache.get(viewerState.gameId)?.data);return;}
-  const sort=event.target.closest('button[data-bs-sort]');
-  if(sort){
-    if(viewerState.boxSort===sort.dataset.bsSort)viewerState.boxSortDesc=!viewerState.boxSortDesc;
-    else{viewerState.boxSort=sort.dataset.bsSort;viewerState.boxSortDesc=viewerState.boxSort!=='name';}
-    renderStats(state.games.find(g=>String(g.id)===viewerState.gameId),viewerState.statsCache.get(viewerState.gameId)?.data);
-    return;
-  }
-  if(event.target.closest('#bsWideToggle')){
-    viewerState.boxWide=!viewerState.boxWide;
-    renderStats(state.games.find(g=>String(g.id)===viewerState.gameId),viewerState.statsCache.get(viewerState.gameId)?.data);
-  }
-});
-$('statsSidebar').addEventListener('input',chartInput);
-$('statsSidebar').addEventListener('change',chartInput);
-$('statsSidebar').addEventListener('pointermove',inspectChartPointer);
-$('statsSidebar').addEventListener('pointerdown',inspectChartPointer);
-let chartResizeWidth=0,chartResizeFrame=0;
-if(typeof ResizeObserver!=='undefined'){
-  const chartResizeObserver=new ResizeObserver(entries=>{
-    const width=entries[0]?.contentRect.width||0;
-    if(Math.abs(width-chartResizeWidth)<1)return;
-    chartResizeWidth=width;
-    if(viewerState.statsTab!=='charts'||!viewerState.statsOpen||$('viewer').hidden)return;
-    cancelAnimationFrame(chartResizeFrame);
-    chartResizeFrame=requestAnimationFrame(()=>{
-      if(viewerState.statsTab==='charts'&&viewerState.statsOpen&&!$('viewer').hidden)
-        renderStats(state.games.find(g=>String(g.id)===viewerState.gameId),viewerState.statsCache.get(viewerState.gameId)?.data);
-    });
+  // Preserve original resize bookkeeping as one classic-script state owner.
+  let chartResizeWidth=0,chartResizeFrame=0;
+  CourtsideGameCenterHandlers.registerGameCenterHandlers({
+    $,viewerState,getState:()=>state,Math,
+    ResizeObserver:typeof ResizeObserver==='undefined'?undefined:ResizeObserver,
+    requestAnimationFrame:(...args)=>requestAnimationFrame(...args),
+    cancelAnimationFrame:(...args)=>cancelAnimationFrame(...args),
+    setStatsTab:(...args)=>setStatsTab(...args),
+    setChartView:(...args)=>setChartView(...args),
+    inspectShot:(...args)=>inspectShot(...args),
+    renderStats:(...args)=>renderStats(...args),
+    chartInput:(...args)=>chartInput(...args),
+    inspectChartPointer:(...args)=>inspectChartPointer(...args),
+    chartKeydown:(...args)=>chartKeydown(...args),
+    getChartResizeWidth:()=>chartResizeWidth,
+    setChartResizeWidth:value=>{chartResizeWidth=value;},
+    getChartResizeFrame:()=>chartResizeFrame,
+    setChartResizeFrame:value=>{chartResizeFrame=value;}
   });
-  chartResizeObserver.observe($('statsContent'));
-}
-$('statsSidebar').addEventListener('keydown',event=>{
-  chartKeydown(event);
-  const active=event.target.closest('[data-bs-tab]');
-  if(!active||!['ArrowLeft','ArrowRight'].includes(event.key))return;
-  event.preventDefault();const tabs=['overview','box','team','charts'];
-  const next=tabs[(tabs.indexOf(active.dataset.bsTab)+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];
-  setStatsTab(next);$('statsSidebar').querySelector(`[data-bs-tab="${next}"]`)?.focus();
-});

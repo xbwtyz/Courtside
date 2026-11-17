@@ -44,7 +44,7 @@ function makeSummary() {
 
 test('Game Center deduplicates concurrent summary requests, caches live data and takes exactly one final snapshot',async()=>{
   const h=makeSummary();
-  runInContext((await source('src/api/espn/game-summary.js'))+'\nglobalThis.runSummary=fetchGameSummary;',h.ctx);
+  runInContext((await source('src/api/espn/game-summary.legacy.js'))+'\nglobalThis.runSummary=fetchGameSummary;',h.ctx);
   const first=h.ctx.runSummary(h.id),second=h.ctx.runSummary(h.id),forced=h.ctx.runSummary(h.id,true);
   await tick();
   assert.equal(h.requests.length,1,'Three callers for one event must share exactly one network request');
@@ -67,7 +67,7 @@ test('Game Center deduplicates concurrent summary requests, caches live data and
 
 test('Game Center summary failures clear pending requests, apply backoff and permit recovery',async()=>{
   const h=makeSummary();
-  runInContext((await source('src/api/espn/game-summary.js'))+'\nglobalThis.runSummary=fetchGameSummary;',h.ctx);
+  runInContext((await source('src/api/espn/game-summary.legacy.js'))+'\nglobalThis.runSummary=fetchGameSummary;',h.ctx);
   const failure=h.ctx.runSummary(h.id);await tick();
   assert.equal(h.requests.length,1);
   h.pending[0].resolve({ok:false,status:503,headers:{get:()=>null}});
