@@ -7,7 +7,7 @@ permissions:
   contents: write
 jobs:
   publish:
-    if: github.event.head_commit.message == 'chore(release): publish Courtside v1.7.0'
+    if: "github.event.head_commit.message == 'chore(release): publish Courtside v1.7.0'"
     runs-on: ubuntu-24.04
     steps:
       - name: Check out the approved merged source
