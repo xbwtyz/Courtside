@@ -11,6 +11,11 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/core/utils.js', {
+    entry: join(root, 'src/core/entry.mjs'),
+    name: 'CourtsideCoreUtils',
+    legacy: 'src/core/utils.legacy.js',
+  }],
   ['src/features/whats-new/controller.js', {
     entry: join(root, 'src/features/whats-new/entry.mjs'),
     name: 'CourtsideWhatsNew',

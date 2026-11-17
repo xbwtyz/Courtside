@@ -225,3 +225,20 @@ test('glossary is bundled as a private controller and legacy proof remains untou
   assert.ok((await readFile(legacy.path)).equals(original));
   assert.equal(await readFile(result.path,'utf8'), html);
 });
+
+test('core formatters are bundled through esbuild and legacy reference remains untouched', async () => {
+  const modern = await build();
+  const html = await readFile(modern.path,'utf8');
+  assert.match(html, /CourtsideCoreUtils/);
+  assert.match(html, /const \{ fmtDate, dateFromString, today, safe, safeLogo \} = CourtsideCoreUtils/);
+  assert.equal((html.match(/<script>/g)||[]).length,1);
+  assert.doesNotMatch(html, /<script[^>]+\bsrc\s*=/i);
+  assert.doesNotMatch(html, /<script[^>]+\btype\s*=\s*["']module/i);
+  const match=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy=await build({verifyBaseline:true});
+  const baseline=await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(baseline));
+  assert.equal(await readFile(modern.path,'utf8'),html);
+});
