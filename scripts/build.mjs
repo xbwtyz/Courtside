@@ -12,6 +12,7 @@ const target = join(root, 'dist', 'courtside.html');
 const featureFragments = [
   ['/*__COURTSIDE_ESPN_SCOREBOARD_ENDPOINT__*/', 'src/api/espn/endpoint.js'],
   ['/*__COURTSIDE_STREAM_PROVIDERS_CONFIG__*/', 'src/api/streams/config.js'],
+  ['/*__COURTSIDE_CORE_DOM__*/', 'src/core/dom.js'],
   ['/*__COURTSIDE_PREFERENCES__*/', 'src/features/settings/preferences.js'],
   ['/*__COURTSIDE_CORE_UTILS__*/', 'src/core/utils.js'],
   ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js'],
@@ -35,6 +36,7 @@ const featureFragments = [
   ['/*__COURTSIDE_STANDINGS__*/', 'src/features/standings/standings.js'],
   ['/*__COURTSIDE_TEAM_PROFILE__*/', 'src/features/team-profile/profile.js'],
   ['/*__COURTSIDE_TEAM_PROFILE_HANDLERS__*/', 'src/features/team-profile/handlers.js'],
+  ['/*__COURTSIDE_MAIN_NAVIGATION__*/', 'src/core/main-navigation.js'],
   ['/*__COURTSIDE_SCOREBOARD_CARD_CONTROLS__*/', 'src/features/scoreboard/card-controls.js'],
   ['/*__COURTSIDE_VIEWER_CONTROLS__*/', 'src/features/viewer/controls.js'],
   ['/*__COURTSIDE_GAME_CENTER_HANDLERS__*/', 'src/features/game-center/handlers.js'],
@@ -53,6 +55,8 @@ const featureFragments = [
   ['/*__COURTSIDE_SETTINGS_DIALOG__*/', 'src/features/settings/dialog.js'],
   ['/*__COURTSIDE_SETTINGS_INITIALIZATION__*/', 'src/features/settings/initialization.js'],
   ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js'],
+  ['/*__COURTSIDE_CORE_POLLING_BOOTSTRAP__*/', 'src/core/polling-bootstrap.js'],
+  ['/*__COURTSIDE_STAT_GLOSSARY__*/', 'src/features/stat-glossary/glossary.js'],
 ];
 
 function replaceExactlyOnce(template, marker, content) {

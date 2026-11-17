@@ -155,3 +155,16 @@ test('Phase 3D stage 2 modular source files reconstruct at unique markers', asyn
   const result=await build({verifyBaseline:true});
   assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
 });
+
+
+test('Phase 3D stage 3 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['CORE_DOM', 'src/core/dom.js'], ['MAIN_NAVIGATION', 'src/core/main-navigation.js'], ['CORE_POLLING_BOOTSTRAP', 'src/core/polling-bootstrap.js'], ['STAT_GLOSSARY', 'src/features/stat-glossary/glossary.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
