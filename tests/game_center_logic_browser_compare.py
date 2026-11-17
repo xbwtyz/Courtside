@@ -33,7 +33,7 @@ JS=r"""async () => {
     requests:requests.length,src:iframe.getAttribute('src'),
     iframeMutations:observer.takeRecords().length});
   try{
-    gameStore.replaceGames([game]);
+    state.games=[game];
     viewerState.gameId=game.id;
     viewerState.statsOpen=true;
     viewerState.statsTab='box';
