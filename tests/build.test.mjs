@@ -198,11 +198,29 @@ test('esbuild resolves the real Whats New module entry without requiring runtime
   const buildText = await readFile(join(root, 'scripts/build.mjs'), 'utf8');
   assert.match(buildText, /bundle: true/);
   assert.match(buildText, /format: 'iife'/);
-  assert.match(buildText, /globalName: 'CourtsideWhatsNew'/);
+  assert.match(buildText, /name: 'CourtsideWhatsNew'/);
+  assert.match(buildText, /name: 'CourtsideStatGlossary'/);
+  assert.match(buildText, /globalName: feature.name/);
   assert.doesNotMatch(buildText, /createWhatsNew\.toString\(\)/);
   const result = await build();
   const html = await readFile(result.path,'utf8');
   assert.match(html, /CourtsideWhatsNew\.createWhatsNew\(\{/);
   assert.doesNotMatch(html, /<script[^>]*src=/i);
   assert.equal((html.match(/<script>/g)||[]).length, 1);
+});
+
+
+test('glossary is bundled as a private controller and legacy proof remains untouched', async () => {
+  const result = await build();
+  const html = await readFile(result.path,'utf8');
+  assert.match(html, /CourtsideStatGlossary/);
+  assert.match(html, /CourtsideStatGlossary\.createStatGlossary\(\{/);
+  assert.doesNotMatch(html, /src\/features\/stat-glossary\/module\.mjs/);
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  assert.doesNotThrow(()=>new Script(match[1]));
+  const legacy = await build({verifyBaseline: true});
+  const original = await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  assert.ok((await readFile(legacy.path)).equals(original));
+  assert.equal(await readFile(result.path,'utf8'), html);
 });

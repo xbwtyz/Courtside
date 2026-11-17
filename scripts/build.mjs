@@ -8,22 +8,31 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const cssMarker = '__COURTSIDE_INLINE_STYLES__';
 const jsMarker = '__COURTSIDE_INLINE_SCRIPT__';
 const target = join(root, 'dist', 'courtside.html');
-const whatsNewPath = 'src/features/whats-new/controller.js';
-const whatsNewEntry = join(root, 'src/features/whats-new/entry.mjs');
+// Migrated features are real ES modules at build time. Only their compiled
+// browser IIFEs are placed back into the original classic-script positions.
+const bundledFeatures = new Map([
+  ['src/features/whats-new/controller.js', {
+    entry: join(root, 'src/features/whats-new/entry.mjs'),
+    name: 'CourtsideWhatsNew',
+    legacy: 'src/features/whats-new/controller.legacy.js',
+  }],
+  ['src/features/stat-glossary/glossary.js', {
+    entry: join(root, 'src/features/stat-glossary/entry.mjs'),
+    name: 'CourtsideStatGlossary',
+    legacy: 'src/features/stat-glossary/glossary.legacy.js',
+  }],
+]);
 
-// Only the migrated feature is bundled for now. The remaining 46 fragments
-// retain their original classic-script execution order until their interfaces
-// can be safely converted and tested.
-async function buildWhatsNewBundle() {
+async function buildFeatureBundle(feature) {
   const result = await bundleJavaScript({
-    entryPoints: [whatsNewEntry],
+    entryPoints: [feature.entry],
     bundle: true,
     platform: 'browser',
     format: 'iife',
-    globalName: 'CourtsideWhatsNew',
+    globalName: feature.name,
     target: ['es2020'],
     write: false,
-    outfile: 'courtside-whats-new.js',
+    outfile: 'courtside-feature.js',
     sourcemap: false,
     minify: false,
     legalComments: 'none',
@@ -31,7 +40,7 @@ async function buildWhatsNewBundle() {
     charset: 'utf8',
   });
   if (result.outputFiles?.length !== 1 || !result.outputFiles[0].text) {
-    throw new Error('esbuild did not produce one self-contained Whats New bundle');
+    throw new Error(`esbuild did not produce one ${feature.name} browser bundle`);
   }
   return result.outputFiles[0].text;
 }
@@ -104,15 +113,15 @@ export async function build({ verifyBaseline = false } = {}) {
   let compiledJs = js;
   for (const [marker, sourcePath] of featureFragments) {
     let fragment = await readFile(join(root, sourcePath), 'utf8');
-    if (sourcePath === whatsNewPath) {
+    const feature = bundledFeatures.get(sourcePath);
+    if (feature) {
       if (verifyBaseline) {
-        // Frozen Phase 3-era controller: only used to prove untouched reference parity.
-        fragment = await readFile(join(root, 'src/features/whats-new/controller.legacy.js'), 'utf8');
+        // Frozen source: used ONLY to prove unchanged v1.6.1 output.
+        fragment = await readFile(join(root, feature.legacy), 'utf8');
       } else {
-        // esbuild resolves real ES module imports and emits an IIFE. Embedding
-        // it at the original controller marker keeps a single classic script.
-        const bundledFeature = await buildWhatsNewBundle();
-        fragment = `  ${bundledFeature}\n${fragment}`;
+        // Bundle a real ESM dependency graph; no runtime imports or servers.
+        const compiledFeature = await buildFeatureBundle(feature);
+        fragment = `  ${compiledFeature}\n${fragment}`;
       }
     }
     compiledJs = replaceExactlyOnce(compiledJs, marker, fragment);
