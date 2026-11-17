@@ -25,7 +25,7 @@ with sync_playwright() as playwright:
         page.set_content(html.read_text(encoding='utf8'), wait_until='domcontentloaded', timeout=20000)
         assert page.locator('#csTabScores').count() == 1, 'Scores navigation missing'
         page.locator('#appSettingsOpen').click(timeout=5000)
-        assert page.locator('#appSettingsModal').is_visible(), 'Settings failed to open'
+        assert page.locator('#appSettingsModal').is_visible(), f'Settings failed to open; page errors: {errors}'
         page.locator('[data-settings-tab="whatsnew"]').first.click(timeout=5000)
         versions = page.locator('#whatsNewVersion')
         assert versions.count() == 1, "What's New version selector missing"
