@@ -86,7 +86,7 @@ function inspect(a){
  const bad=[];
  for(const json of [
   {athletes:[],categories,pagination:{page:1,count:2,pages:2},currentSeason:{year:2027,type:2}},
-  payload(1,2026),payload(1,2027,[athlete(1)],2,99),
+  payload(1,2026),payload(1,2027,[athlete(1)],2,101),
   {...payload(1),pagination:{count:2,pages:2,page:2}}
  ]){try{api.leaderPagePayload(json,1,2027);}catch(e){bad.push(e.message);}}
  const numeric=['34:30','3,300','42%','—','invalid',null].map(api.leaderNumeric);
