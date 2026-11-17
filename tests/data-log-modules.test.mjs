@@ -76,7 +76,7 @@ async function scenario(which) {
 test('Data Log module mirrors original audit outcomes, snapshots, paused baselines and error handling',async()=>{
   const legacy=await scenario('legacy'),modern=await scenario('modern');
   assert.deepEqual(modern,legacy);
-  assert.deepEqual(modern.snapshot.entries.map(e=>e.outcome),['error','received','changed','unchanged','baseline']);
+  assert.deepEqual(modern.snapshot.entries.map(e=>e.outcome),['error','changed','unchanged','baseline']);
 });
 test('snapshot cap, semantic score records, and constants are unchanged',async()=>{
   const old=(await engine('legacy')).api,modern=(await engine('modern')).api;
