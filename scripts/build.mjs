@@ -338,7 +338,7 @@ function replaceExactlyOnce(template, marker, content) {
 
 export async function build({ verifyBaseline = false } = {}) {
   const [template, css, js] = await Promise.all([
-    readFile(join(root, 'src/index.html'), 'utf8'),
+    readFile(join(root, verifyBaseline ? 'src/index.legacy.html' : 'src/index.html'), 'utf8'),
     readFile(join(root, 'src/styles/main.css'), 'utf8'),
     readFile(join(root, 'src/scripts/app.js'), 'utf8'),
   ]);

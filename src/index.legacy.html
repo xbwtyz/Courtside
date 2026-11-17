@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0c0d11" />
+  <title>Courtside 1.6.1 — Live NBA Scores &amp; League Leaders</title>
+  <style>__COURTSIDE_INLINE_STYLES__</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Courtside home" id="homeLink">
+      <div class="brandmark" aria-hidden="true">C<span style="font-size:15px;margin-left:1px">•</span></div>
+      <div><div class="brandname">COURTSIDE</div><div class="brand-sub">LIVE SCORES &amp; STATS</div></div>
+    </a>
+    <div class="top-right"><span class="version-tag" aria-label="Courtside version 1.6.1">v1.6.1</span><span class="nba-tag"><span class="orange-ball" aria-hidden="true"></span>2026–27 NBA</span><button type="button" class="control cs-alert-bell" id="alertsMainBell" aria-haspopup="dialog" aria-controls="alertsHistory" aria-label="View live game alert history" title="Live alerts">♢ <span class="cs-alert-bell-count" hidden></span></button><button type="button" class="control cs-global-settings-trigger" id="appSettingsOpen" aria-haspopup="dialog" aria-controls="appSettingsModal" title="Courtside settings" aria-label="Open Courtside settings">⚙ <span>Settings</span><i class="cs-whatsnew-dot" id="whatsNewMainDot" aria-hidden="true" hidden></i></button></div>
+  </header>
+
+  <nav class="cs-main-nav" role="tablist" aria-label="Courtside pages">
+    <button class="cs-main-tab" id="csTabScores" type="button" role="tab" aria-selected="true" aria-controls="scoresView">Scores</button>
+    <button class="cs-main-tab" id="csTabStandings" type="button" role="tab" aria-selected="false" aria-controls="standingsView">Standings</button>
+    <button class="cs-main-tab" id="csTabLeaders" type="button" role="tab" aria-selected="false" aria-controls="leadersView">League Leaders</button>
+    <button class="cs-main-tab" id="csTabLog" type="button" role="tab" aria-selected="false" aria-controls="dataLogView">Data Log</button>
+  </nav>
+  <div class="cs-scores-view" id="scoresView" role="tabpanel" aria-labelledby="csTabScores">
+  <div class="hero compact-hero">
+    <div><div class="eyebrow">LIVE NBA COVERAGE</div><h1>NBA <span>SCOREBOARD.</span></h1></div>
+    <div class="status-box" aria-live="polite"><div class="connection" id="connection"><span class="dot loading"></span> CONNECTING TO LIVE DATA</div><div class="last-update" id="updated">Waiting for first update…</div></div>
+  </div>
+  <section class="summary-strip" aria-label="Daily game overview">
+    <span><strong id="totalCount">—</strong> Games</span>
+    <span class="summary-live"><strong id="liveCount">—</strong> Live</span>
+    <span><strong id="upcomingCount">—</strong> Upcoming</span>
+    <span><strong id="finalCount">—</strong> Final</span>
+  </section>
+
+  <nav class="toolbar" aria-label="Scoreboard controls">
+    <div class="date-nav">
+      <button class="control icon-control" type="button" id="prevDay" aria-label="Previous day">‹</button>
+      <input class="control date-field" type="date" id="datePicker" aria-label="Select NBA game date" />
+      <button class="control icon-control" type="button" id="nextDay" aria-label="Next day">›</button>
+      <button class="control today-btn" type="button" id="todayBtn">Today</button>
+    </div>
+    <div class="filters">
+      <label class="search" aria-label="Search by team">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="teamSearch" type="search" placeholder="Search teams…" autocomplete="off" aria-label="Search teams" />
+      </label>
+      <label class="toggle"><input type="checkbox" id="liveOnly" /> Live only</label>
+      <button class="control refresh-btn" type="button" id="refreshBtn" aria-label="Refresh scores">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 12-2L20 12M4 12l2.4 5A7 7 0 0 0 18.5 15"/></svg>
+        Refresh
+      </button>
+      <button class="control settings-toggle" type="button" id="refreshSettingsToggle" aria-haspopup="dialog" title="View ESPN refresh status">ⓘ Refresh info</button>
+    </div>
+  </nav>
+
+  <div class="score-ticker" id="scoreTicker" aria-label="NBA score ticker"></div>
+  <div id="feedback" class="feedback" role="alert"></div>
+  <main id="scoreboard" aria-live="polite"><div class="cards" aria-label="Loading scores"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div></main>
+  </div>
+  <section class="cs-standings-view" id="standingsView" role="tabpanel" aria-labelledby="csTabStandings" hidden>
+    <div class="cs-standings-top">
+      <div><div class="eyebrow">2026–27 NBA SEASON</div><h1>LEAGUE <span>STANDINGS.</span></h1><p class="cs-standings-sub">Conference rankings, records and trends. Select a team for its profile.</p></div>
+      <button type="button" class="control" id="standingsRefresh">↻ Refresh standings</button>
+    </div>
+    <div id="standingsStatus" class="cs-standings-status" role="status">Standings load when you open this tab.</div>
+    <div id="standingsContent"><div class="cs-standings-empty">Select Standings to load the latest conference records from ESPN.</div></div>
+  </section>
+
+  <!-- Courtside 1.5: league leaders are requested only when selected. -->
+  <section class="cs-leaders-view" id="leadersView" role="tabpanel" aria-labelledby="csTabLeaders" hidden>
+    <header class="cs-leaders-heading">
+      <div><div class="eyebrow" id="leadersSeasonHeading">NBA REGULAR SEASON</div><h1>LEAGUE <span>LEADERS.</span></h1><p>Full ESPN-listed statistical leaderboard. Browse players across six categories.</p></div>
+      <button class="control refresh-btn" id="leadersRefresh" type="button">↻ Refresh leaders</button>
+    </header>
+    <div class="cs-leaders-progress" id="leadersProgress" role="status" aria-live="polite">No leaderboard requests made yet.</div>
+    <div class="cs-leaders-summary" id="leadersSummary" aria-label="League leaders dataset summary"></div>
+    <nav class="cs-leader-cats" id="leadersCategories" aria-label="Statistical categories"></nav>
+    <section class="cs-leaders-filters" aria-label="Leaderboard filters">
+      <label>Rank by<select id="leadersMetric" aria-label="Rank by statistic"></select></label>
+      <label>Team<select id="leadersTeam"><option value="all">All 30 teams</option></select></label>
+      <label>Position<select id="leadersPosition"><option value="all">All positions</option><option value="G">Guards</option><option value="F">Forwards</option><option value="C">Centers</option></select></label>
+      <label>Games played<select id="leadersGames"><option value="5">5+ games</option><option value="0">All games (0+)</option><option value="10">10+ games</option><option value="15">15+ games</option><option value="20">20+ games</option><option value="custom">Custom...</option></select></label>
+      <label class="cs-leader-custom" id="leadersGamesCustomWrap" hidden>Custom games<input id="leadersGamesCustom" type="number" value="5" min="0" max="100" step="1"></label>
+      <label>Minutes per game<select id="leadersMinutes"><option value="0">Any minutes</option><option value="10">10+ MPG</option><option value="15">15+ MPG</option><option value="20">20+ MPG</option><option value="25">25+ MPG</option><option value="custom">Custom...</option></select></label>
+      <label class="cs-leader-custom" id="leadersMinutesCustomWrap" hidden>Custom minutes<input id="leadersMinutesCustom" type="number" value="0" min="0" max="48" step="0.5"></label>
+      <label id="leadersVolumeWrap">Shooting volume<select id="leadersVolume"><option value="auto">Default minimum</option><option value="off">No minimum</option><option value="2">2+ attempts / game</option><option value="5">5+ attempts / game</option><option value="10">10+ attempts / game</option><option value="custom">Custom...</option></select></label>
+      <label class="cs-leader-custom" id="leadersVolumeCustomWrap" hidden>Custom attempts/game<input id="leadersVolumeCustom" type="number" value="2" min="0" max="40" step="0.5"></label>
+      <label class="cs-leader-search">Find player<input id="leadersSearch" type="search" placeholder="Search all ranked players..." autocomplete="off"></label>
+      <button type="button" class="control cs-leader-reset" id="leadersReset">Clear filters</button>
+    </section>
+    <div class="cs-leaders-toolbar"><div id="leadersResults" role="status" aria-live="polite">Waiting for ESPN.</div><label>Rows <select id="leadersRows"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label></div>
+    <div class="cs-leader-table-scroll" id="leadersTableScroll" tabindex="0" aria-label="Scrollable league leaders table">
+      <table class="cs-leaders-table" id="leadersTable"><thead id="leadersTableHead"></thead><tbody id="leadersTableBody"><tr><td>Open League Leaders to load data.</td></tr></tbody></table>
+    </div>
+    <div class="cs-leaders-paging" id="leadersPaging"></div>
+    <p class="cs-leaders-caution" id="leadersCaution">Scope: all athletes supplied by ESPN's paginated statistics endpoint, not a certified census of every rostered NBA player. Minimum games and shooting requirements are Courtside filters, not official NBA qualification rules. ESPN data may be delayed.</p>
+  </section>
+  <!-- Courtside 1.5.6 — record existing ESPN traffic, never initiate it. -->
+  <section class="cs-log-view" id="dataLogView" role="tabpanel" aria-labelledby="csTabLog" hidden>
+    <header class="cs-log-head">
+      <div><div class="eyebrow">ESPN API ACTIVITY MONITOR</div><h1>DATA <span>LOG.</span></h1><p>Automatic in-session request history, compared against the previous successful snapshot of the same resource. Opening this tab makes no new requests.</p></div>
+      <div class="cs-log-status" id="dataLogStatus" role="status"><span class="dot"></span> RECORDING</div>
+    </header>
+    <div class="cs-log-summary" id="dataLogSummary" aria-label="Data log statistics"></div>
+    <div class="cs-log-tools" role="group" aria-label="Data log controls">
+      <label>Source<select id="dataLogSource"><option value="all">All ESPN sources</option><option value="Scoreboard">Scores</option><option value="Game Center">Game Center</option><option value="Standings">Standings</option><option value="League Leaders">League Leaders</option><option value="Player Profile">Player Profiles</option><option value="Team Profile">Team Profiles</option></select></label>
+      <label>Outcome<select id="dataLogOutcome"><option value="all">All outcomes</option><option value="changed">Changed</option><option value="unchanged">Unchanged</option><option value="baseline">Baseline</option><option value="received">Page received</option><option value="error">Failed / invalid</option><option value="canceled">Canceled</option></select></label>
+      <label class="cs-log-search">Search<input type="search" id="dataLogSearch" placeholder="Team, player, field, 429..." autocomplete="off"></label>
+      <button type="button" class="control" id="dataLogPause">Ⅱ Pause</button>
+      <button type="button" class="control" id="dataLogExport">↓ Export JSON</button>
+      <button type="button" class="control" id="dataLogClear">Clear history</button>
+    </div>
+    <div class="cs-log-list" id="dataLogEntries" aria-live="off"><div class="cs-log-empty">Waiting for the first ESPN request. The log records across every Courtside tab.</div></div>
+    <div class="cs-log-foot"><span id="dataLogCount"></span><button class="control" type="button" id="dataLogMore" hidden>Show 50 more</button></div>
+    <p class="cs-log-guidance">History and comparison snapshots stay in memory only. The oldest request entries are discarded after 2,000 records. Comparison baselines have independent memory limits and inactive baselines may be evicted; their next response becomes a fresh baseline. Clock countdowns, images, raw API payloads and third-party stream URLs are not logged. Clear history retains active comparison baselines; Pause stops recording while updating those baselines efficiently. Scoreboard and Game Center polling keep their existing schedules.</p>
+  </section>
+  <footer>
+    <span><span class="foot-strong">COURTSIDE</span> · An independent NBA scoreboard · Times shown in your device’s time zone.</span>
+    <span>Data: <a href="https://www.espn.com/nba/scoreboard" target="_blank" rel="noopener noreferrer">ESPN</a> (unofficial public endpoint). Not affiliated with the NBA or ESPN. Live data may be delayed. Stream indexes: <a href="https://ppv.st/" target="_blank" rel="noopener noreferrer">PPV.st</a>, <a href="https://aurasports.xyz/" target="_blank" rel="noopener noreferrer">AuraSports</a>, and <a href="https://matchora.to/" target="_blank" rel="noopener noreferrer">Matchora</a>.</span>
+  </footer>
+</div>
+
+
+<!-- Multiview player with an independent Game Center statistics panel. -->
+<div class="viewer" id="viewer" hidden>
+  <div class="viewer-backdrop" id="viewerBackdrop"></div>
+  <section class="viewer-dialog" id="viewerDialog" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" tabindex="-1">
+    <div class="viewer-header compact-viewer-header">
+      <div class="viewer-brand"><h2 class="viewer-heading" id="viewerTitle">COURTSIDE</h2><span class="multiview-label">MULTIVIEW</span></div>
+      <div class="viewer-header-actions">
+        <div class="multiview-layout-buttons" role="group" aria-label="Choose number of video screens">
+          <button type="button" data-layout="1" aria-pressed="true">1</button>
+          <button type="button" data-layout="2" aria-pressed="false">2</button>
+          <button type="button" data-layout="4" aria-pressed="false">4</button>
+        </div>
+        <button class="control viewer-switch" id="tickerToggle" type="button" aria-pressed="false" aria-controls="viewerTicker">▤ Show ticker</button>
+        <button class="control viewer-switch" id="theaterToggle" type="button" aria-pressed="false">⛶ Theater</button>
+        <button class="control viewer-switch" id="statsToggle" type="button" aria-pressed="true">▤ Hide stats</button>
+        <button class="control viewer-switch" id="viewerRetry" type="button" title="Refresh stream listings">↻ Streams</button>
+        <button class="control viewer-switch cs-alert-bell" id="alertsViewerBell" type="button" aria-haspopup="dialog" aria-controls="alertsHistory" title="View game alerts" aria-label="View game alert history">♢ Alerts <span class="cs-alert-bell-count" hidden></span></button><button class="control viewer-switch" id="viewerSettingsOpen" type="button" aria-haspopup="dialog" aria-controls="appSettingsModal" title="Courtside settings">⚙ Settings<i class="cs-whatsnew-dot" id="whatsNewViewerDot" aria-hidden="true" hidden></i></button>
+        <a class="control viewer-switch viewer-open-link" id="viewerExternal" href="#" target="_blank" rel="noopener noreferrer" hidden title="Open active stream in new tab">↗ Open stream</a>
+        <button class="control viewer-close" id="viewerClose" type="button" aria-label="Close player">&times;</button>
+      </div>
+    </div>
+    <div class="viewer-workspace" id="viewerWorkspace">
+      <div class="viewer-video-column">
+        <div class="player-stage">
+          <div class="single-player">
+            <div class="multiview-grid layout-1" id="multiviewGrid">
+                <section class="stream-tile is-active" id="streamTile0" data-slot="0" aria-label="Video screen 1">
+                  <div class="stream-tile-header">
+                    <button class="stream-focus-button" type="button" data-focus-tile="0" id="streamFocus0" aria-pressed="true">SCREEN 1<span class="stream-active-pill">● STATS</span></button>
+                    <div class="stream-tile-controls">
+                      <select id="slotGame0" data-slot-game="0" aria-label="Game shown on screen 1"><option value="">Choose game…</option></select>
+                      <select id="slotSource0" data-slot-source="0" aria-label="Stream source on screen 1" disabled><option value="">No sources</option></select>
+                    </div>
+                  </div>
+                  <div class="player-wrap">
+                    <div class="viewer-message" id="playerMessage0">Choose a game to start screen 1.</div>
+                    <iframe id="playerFrame0" title="NBA stream for screen 1" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+                    <button class="stream-focus-overlay" type="button" data-focus-tile="0" id="focusOverlay0" aria-label="Show stats for screen 1" hidden><span>Show this game's stats</span></button>
+                  </div>
+                </section>
+                <section class="stream-tile" id="streamTile1" data-slot="1" aria-label="Video screen 2" hidden>
+                  <div class="stream-tile-header">
+                    <button class="stream-focus-button" type="button" data-focus-tile="1" id="streamFocus1" aria-pressed="false">SCREEN 2<span class="stream-active-pill" hidden>● STATS</span></button>
+                    <div class="stream-tile-controls">
+                      <select id="slotGame1" data-slot-game="1" aria-label="Game shown on screen 2"><option value="">Choose game…</option></select>
+                      <select id="slotSource1" data-slot-source="1" aria-label="Stream source on screen 2" disabled><option value="">No sources</option></select>
+                    </div>
+                  </div>
+                  <div class="player-wrap">
+                    <div class="viewer-message" id="playerMessage1">Choose a game to start screen 2.</div>
+                    <iframe id="playerFrame1" title="NBA stream for screen 2" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+                    <button class="stream-focus-overlay" type="button" data-focus-tile="1" id="focusOverlay1" aria-label="Show stats for screen 2" hidden><span>Show this game's stats</span></button>
+                  </div>
+                </section>
+                <section class="stream-tile" id="streamTile2" data-slot="2" aria-label="Video screen 3" hidden>
+                  <div class="stream-tile-header">
+                    <button class="stream-focus-button" type="button" data-focus-tile="2" id="streamFocus2" aria-pressed="false">SCREEN 3<span class="stream-active-pill" hidden>● STATS</span></button>
+                    <div class="stream-tile-controls">
+                      <select id="slotGame2" data-slot-game="2" aria-label="Game shown on screen 3"><option value="">Choose game…</option></select>
+                      <select id="slotSource2" data-slot-source="2" aria-label="Stream source on screen 3" disabled><option value="">No sources</option></select>
+                    </div>
+                  </div>
+                  <div class="player-wrap">
+                    <div class="viewer-message" id="playerMessage2">Choose a game to start screen 3.</div>
+                    <iframe id="playerFrame2" title="NBA stream for screen 3" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+                    <button class="stream-focus-overlay" type="button" data-focus-tile="2" id="focusOverlay2" aria-label="Show stats for screen 3" hidden><span>Show this game's stats</span></button>
+                  </div>
+                </section>
+                <section class="stream-tile" id="streamTile3" data-slot="3" aria-label="Video screen 4" hidden>
+                  <div class="stream-tile-header">
+                    <button class="stream-focus-button" type="button" data-focus-tile="3" id="streamFocus3" aria-pressed="false">SCREEN 4<span class="stream-active-pill" hidden>● STATS</span></button>
+                    <div class="stream-tile-controls">
+                      <select id="slotGame3" data-slot-game="3" aria-label="Game shown on screen 4"><option value="">Choose game…</option></select>
+                      <select id="slotSource3" data-slot-source="3" aria-label="Stream source on screen 4" disabled><option value="">No sources</option></select>
+                    </div>
+                  </div>
+                  <div class="player-wrap">
+                    <div class="viewer-message" id="playerMessage3">Choose a game to start screen 4.</div>
+                    <iframe id="playerFrame3" title="NBA stream for screen 4" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+                    <button class="stream-focus-overlay" type="button" data-focus-tile="3" id="focusOverlay3" aria-label="Show stats for screen 4" hidden><span>Show this game's stats</span></button>
+                  </div>
+                </section>
+            </div>
+          </div>
+        </div>
+        <div class="score-ticker viewer-ticker" id="viewerTicker" aria-label="Click a score to watch a game on the selected screen" hidden></div>
+      </div>
+      <aside class="stats-sidebar" id="statsSidebar" aria-label="NBA game center, player box scores and charts">
+        <div class="bs-head">
+          <div class="game-center-heading"><h3>GAME CENTER <span class="selected-screen-label" id="selectedScreenLabel">SCREEN 1</span></h3><div class="bs-head-status" id="boxStatsStatus" aria-live="polite">ESPN game statistics</div><div class="cs-gc-team-links" id="gcTeamLinks" aria-label="Team profiles"></div></div>
+          <div class="bs-head-actions"><button class="stats-refresh" id="statsRefresh" type="button" title="Refresh game statistics">↻ Refresh</button></div>
+        </div>
+        <nav class="bs-tabs" role="tablist" aria-label="Game center sections">
+          <button class="bs-tab" id="bsTabOverview" type="button" role="tab" data-bs-tab="overview" aria-controls="statsContent" aria-selected="false">Overview</button>
+          <button class="bs-tab" id="bsTabBox" type="button" role="tab" data-bs-tab="box" aria-controls="statsContent" aria-selected="true">Box Score</button>
+          <button class="bs-tab" id="bsTabTeam" type="button" role="tab" data-bs-tab="team" aria-controls="statsContent" aria-selected="false">Team Stats</button>
+          <button class="bs-tab" id="bsTabCharts" type="button" role="tab" data-bs-tab="charts" aria-controls="statsContent" aria-selected="false">Charts</button>
+        </nav>
+        <div id="statsContent" role="tabpanel" aria-labelledby="bsTabBox" aria-live="polite"><p class="stats-help">Select a game to load player statistics.</p></div>
+      </aside>
+    </div>
+    <p class="viewer-note" id="viewerNote" role="status" hidden></p>
+  </section>
+</div>
+
+
+<!-- Courtside 1.5.3: app-wide preferences and refresh diagnostics. -->
+<div class="cs-settings-modal" id="appSettingsModal" hidden>
+  <div class="cs-settings-backdrop" id="appSettingsBackdrop"></div>
+  <section class="cs-settings-dialog" id="appSettingsDialog" role="dialog" aria-modal="true" aria-labelledby="appSettingsTitle" tabindex="-1">
+    <header class="cs-settings-header">
+      <div><div class="eyebrow">PERSONALIZE YOUR EXPERIENCE</div><h2 id="appSettingsTitle">COURTSIDE <span>SETTINGS.</span></h2></div>
+      <button class="cs-settings-close" id="appSettingsClose" type="button" aria-label="Close settings">×</button>
+    </header>
+    <div class="cs-settings-workspace">
+      <nav class="cs-settings-nav" aria-label="Settings sections" role="tablist">
+        <button class="cs-settings-nav-button" id="csSettingsTabGeneral" data-settings-tab="general" role="tab" aria-selected="true" aria-controls="csSettingsGeneral" type="button">⌂ <span>General</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabTicker" data-settings-tab="ticker" role="tab" aria-selected="false" aria-controls="csSettingsTicker" type="button">▤ <span>Score ticker</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabViewer" data-settings-tab="viewer" role="tab" aria-selected="false" aria-controls="csSettingsViewer" type="button">▣ <span>Viewer &amp; Game Center</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabLeaders" data-settings-tab="leaders" role="tab" aria-selected="false" aria-controls="csSettingsLeaders" type="button">▥ <span>League Leaders</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabAlerts" data-settings-tab="alerts" role="tab" aria-selected="false" aria-controls="csSettingsAlerts" type="button">♢ <span>Live Alerts</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabData" data-settings-tab="data" role="tab" aria-selected="false" aria-controls="csSettingsData" type="button">↻ <span>Data &amp; refresh</span></button>
+        <button class="cs-settings-nav-button" id="csSettingsTabWhatsnew" data-settings-tab="whatsnew" role="tab" aria-selected="false" aria-controls="csSettingsWhatsnew" type="button">✦ <span>What's New</span><span class="cs-whatsnew-new" id="whatsNewNavBadge" hidden aria-hidden="true">NEW</span></button>
+      </nav>
+      <div class="cs-settings-body">
+        <section class="cs-settings-section" id="csSettingsGeneral" role="tabpanel" aria-labelledby="csSettingsTabGeneral">
+          <h3>General</h3><p class="cs-settings-intro">Choose how Courtside opens. These preferences are stored locally in this browser when available.</p>
+          <div class="cs-settings-field"><label for="settingsLanding">Page to open on launch</label><select id="settingsLanding"><option value="scores">Scores</option><option value="standings">Standings</option><option value="leaders">League Leaders</option></select><small>The Courtside logo always returns to Scores.</small></div>
+          <label class="cs-settings-switchrow" for="settingsDefaultLiveOnly"><span><strong>Live Only on startup</strong><small>When Scores opens, show only games currently live. You can still use the Live only control for this session. Changing this preference takes effect on the next launch.</small></span><input type="checkbox" id="settingsDefaultLiveOnly"></label>
+          <button class="cs-wn-launch" id="whatsNewOpenFromGeneral" type="button">✦ View What's New <span aria-hidden="true">›</span></button>
+          <div class="cs-settings-reset"><button class="control" type="button" id="settingsResetAll">Restore default settings</button><p>Resets saved settings only. No browser history or streaming data is deleted.</p></div>
+        </section>
+        <section class="cs-settings-section" id="csSettingsTicker" role="tabpanel" aria-labelledby="csSettingsTabTicker" hidden>
+          <h3>Score ticker</h3><p class="cs-settings-intro">Customize both score tickers without changing the games or streaming controls.</p>
+          <label class="cs-settings-switchrow" for="settingsShowTicker"><span><strong>Show scoreboard ticker</strong><small>Display the scrolling scoreboard above game cards.</small></span><input type="checkbox" id="settingsShowTicker"></label>
+          <label class="cs-settings-switchrow" for="settingsAutoScroll"><span><strong>Automatically scroll tickers</strong><small>Both tickers remain draggable or swipeable when this is off.</small></span><input type="checkbox" id="settingsAutoScroll"></label>
+          <div class="cs-settings-field"><label for="settingsTickerSpeed">Automatic scroll speed</label><select id="settingsTickerSpeed"><option value="slow">Relaxed</option><option value="normal">Normal</option><option value="fast">Fast</option></select><small>Hover, drag, keyboard focus, and reduced-motion preferences still pause movement.</small></div>
+        </section>
+        <section class="cs-settings-section" id="csSettingsViewer" role="tabpanel" aria-labelledby="csSettingsTabViewer" hidden>
+          <h3>Viewer &amp; Game Center</h3><p class="cs-settings-intro">Set how a new game viewer opens. Changes here take effect the next time you open a game, without interrupting any current streams.</p>
+          <div class="cs-settings-field"><label for="settingsDefaultStatsTab">Default Game Center tab</label><select id="settingsDefaultStatsTab"><option value="overview">Overview</option><option value="box">Box Score</option><option value="team">Team Stats</option><option value="charts">Charts</option></select><small>Which statistics panel is selected when a new viewer opens.</small></div>
+          <div class="cs-settings-field"><label for="settingsDefaultLayout">Default player layout</label><select id="settingsDefaultLayout"><option value="1">1 screen</option><option value="2">2 screens</option><option value="4">4 screens</option></select><small>The chosen game starts on Screen 1. Other screens begin empty; no additional streams launch automatically.</small></div>
+          <label class="cs-settings-switchrow" for="settingsDefaultStatsOpen"><span><strong>Show stats sidebar on open</strong><small>Automatically show the Game Center panel when a new viewer opens.</small></span><input type="checkbox" id="settingsDefaultStatsOpen"></label>
+          <label class="cs-settings-switchrow" for="settingsDefaultViewerTicker"><span><strong>Show viewer ticker on open</strong><small>Automatically show the NBA score ticker beneath the video. This does not affect the main scoreboard ticker.</small></span><input type="checkbox" id="settingsDefaultViewerTicker"></label>
+          <p class="cs-settings-note">These are startup defaults, not locks. The viewer's layout, stats, and ticker controls still work normally, and temporary changes are not saved as new defaults.</p>
+        </section>
+        <section class="cs-settings-section" id="csSettingsLeaders" role="tabpanel" aria-labelledby="csSettingsTabLeaders" hidden>
+          <h3>League Leaders</h3><p class="cs-settings-intro">Set the initial leaderboard category and table size.</p>
+          <div class="cs-settings-field"><label for="settingsLeadersCategory">Default category</label><select id="settingsLeadersCategory"><option value="scoring">Scoring</option><option value="shooting">Shooting</option><option value="playmaking">Playmaking</option><option value="rebounding">Rebounding</option><option value="defense">Defense</option><option value="general">General</option></select><small>Changing this setting switches the selected leaderboard category.</small></div>
+          <div class="cs-settings-field"><label for="settingsLeadersRows">Rows per page</label><select id="settingsLeadersRows"><option value="25">25 players</option><option value="50">50 players</option><option value="100">100 players</option></select><small>Also synchronized with the Rows control on the leaderboard.</small></div>
+          <p class="cs-settings-note">The existing games, minutes, position, team, and shooting-volume filters remain available in League Leaders.</p>
+        </section>
+
+        <section class="cs-settings-section" id="csSettingsAlerts" role="tabpanel" aria-labelledby="csSettingsTabAlerts" hidden>
+          <h3>Live Alerts</h3><p class="cs-settings-intro">Get in-app notifications from the ESPN scores Courtside already fetches. Alerts work only while this tab is active and displaying today's scoreboard date. No background polling is added.</p>
+          <label class="cs-settings-switchrow" for="settingsAlertsEnabled"><span><strong>Enable live alerts</strong><small>Off by default. First successful update establishes a baseline instead of replaying earlier events.</small></span><input type="checkbox" id="settingsAlertsEnabled"></label>
+          <div class="cs-settings-field"><label for="settingsAlertsScope">Games to monitor</label><select id="settingsAlertsScope"><option value="all">All NBA games</option><option value="selected">Selected teams only</option></select><small>When a monitored team plays, either home or away counts. The existing scoreboard date must be today.</small></div>
+          <div id="alertsTeamsContainer" class="cs-alert-team-area" hidden>
+            <div class="cs-settings-field"><label for="alertsTeamSearch">Choose teams (multiple allowed)</label><input id="alertsTeamSearch" type="search" placeholder="Find a team…" autocomplete="off"></div>
+            <div id="alertsTeamChoices" class="cs-alert-team-choices" role="group" aria-label="NBA teams"></div>
+            <div id="alertsTeamCount" class="cs-alert-team-count" role="status"></div>
+          </div>
+          <h4 class="cs-alert-settings-subheading">Notify me about</h4>
+          <label class="cs-settings-switchrow" for="settingsAlertsStart"><span><strong>Game started</strong><small>One alert when an upcoming game becomes live.</small></span><input type="checkbox" id="settingsAlertsStart"></label>
+          <label class="cs-settings-switchrow" for="settingsAlertsHalftime"><span><strong>Halftime</strong><small>One alert when ESPN explicitly reports halftime.</small></span><input type="checkbox" id="settingsAlertsHalftime"></label>
+          <label class="cs-settings-switchrow" for="settingsAlertsFinal"><span><strong>Final score</strong><small>One alert when a live game becomes final.</small></span><input type="checkbox" id="settingsAlertsFinal"></label>
+          <label class="cs-settings-switchrow" for="settingsAlertsLead"><span><strong>Lead changes</strong><small>Q4 or overtime only; one alert per game every 60 seconds at most. A tie itself isn't a lead change.</small></span><input type="checkbox" id="settingsAlertsLead"></label>
+          <label class="cs-settings-switchrow" for="settingsAlertsClose"><span><strong>Close games</strong><small>Within three points, with 2:00 or less remaining in Q4 or overtime. Once per period.</small></span><input type="checkbox" id="settingsAlertsClose"></label>
+          <h4 class="cs-alert-settings-subheading">Presentation</h4>
+          <label class="cs-settings-switchrow" for="settingsAlertsSound"><span><strong>Play notification sound</strong><small>Off by default. Browser audio may need interaction to start.</small></span><input type="checkbox" id="settingsAlertsSound"></label>
+          <div class="cs-settings-field"><label for="settingsAlertsVolume">Sound volume</label><select id="settingsAlertsVolume"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+          <button class="control" id="alertsTestSound" type="button">♪ Test sound</button>
+          <label class="cs-settings-switchrow" for="settingsAlertsOverlay"><span><strong>Show alerts over video</strong><small>Off by default to prevent score spoilers. Alerts will still be saved in history.</small></span><input type="checkbox" id="settingsAlertsOverlay"></label>
+          <p class="cs-settings-note" id="alertsSettingsStatus" role="status">Alerts are off. Enable them to start monitoring today's games.</p>
+        </section>
+        <section class="cs-settings-section" id="csSettingsData" role="tabpanel" aria-labelledby="csSettingsTabData" hidden>
+          <h3>Data &amp; refresh</h3><p class="cs-settings-intro">Current ESPN refresh schedule. Polling speeds are intentionally fixed to protect rate limits and live coverage.</p>
+          <div class="cs-settings-rates"><div><span>Live scores</span><strong>10 seconds</strong></div><div><span>Selected live game stats</span><strong>15 seconds</strong></div><div><span>No live games</span><strong>60 seconds</strong></div><div><span>League Leaders</span><strong>On demand · 30-minute cache</strong></div></div>
+          <div class="cs-settings-data-status"><strong>Request status</strong><div class="settings-meta" id="nextRefresh" aria-live="off">Checking next update…</div></div>
+          <div class="cs-settings-data-status"><strong>Data Log performance</strong><div class="settings-meta cs-log-perf" id="dataLogPerformance" aria-live="off">Measuring local logging overhead…</div></div>
+          <p class="cs-settings-note">Automatic score and Game Center requests pause in background tabs or for completed historical games. ESPN rate-limit responses trigger shared cooldowns. This page does not perform extra requests.</p>
+        </section>
+        <section class="cs-settings-section" id="csSettingsWhatsnew" role="tabpanel" aria-labelledby="csSettingsTabWhatsnew" hidden>
+          <h3>What's New</h3>
+          <p class="cs-settings-intro">Explore Courtside's release history one version at a time. Choose a release or step through previous updates.</p>
+          <p class="cs-wn-banner"><strong>New in v1.6.1:</strong> This interactive release-history viewer is now available in Settings. The 16 selectable milestones below cover v1.0 through v1.6.</p>
+          <div class="cs-wn-picker"><label for="whatsNewVersion">Select a version</label><select id="whatsNewVersion"></select></div>
+          <div class="cs-wn-pager" role="group" aria-label="Navigate release history">
+            <button class="control" type="button" id="whatsNewOlder">‹ Older</button>
+            <span id="whatsNewCount" aria-live="off"></span>
+            <button class="control" type="button" id="whatsNewNewer">Newer ›</button>
+          </div>
+          <div class="cs-wn-release" id="whatsNewDetails" role="region" aria-labelledby="whatsNewReleaseTitle">
+            <div class="cs-wn-release-head"><h4 id="whatsNewReleaseTitle">Release notes</h4></div>
+          </div>
+          <p id="whatsNewAnnounce" class="cs-wn-footnote" role="status" aria-live="polite" aria-atomic="true"></p>
+          <p class="cs-wn-footnote">Historical note: expanded box scores and Lead, Shots, and Win Probability charts were added during earlier Courtside development, but their precise original version numbers were not independently verified.</p>
+        </section>
+        
+        <div class="cs-settings-foot"><span id="settingsStorageStatus" role="status"></span><span>Courtside v1.6.1</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- Courtside 1.6: in-page live alerts; never requests ESPN on its own. -->
+<div class="cs-alert-toasts" id="alertsToasts" aria-live="polite" aria-relevant="additions" aria-label="Live game notifications"></div>
+<div class="cs-alert-history-overlay" id="alertsHistory" hidden>
+  <div class="cs-alert-history-backdrop" id="alertsHistoryBackdrop"></div>
+  <section class="cs-alert-history-dialog" id="alertsHistoryDialog" role="dialog" aria-modal="true" aria-labelledby="alertsHistoryTitle" tabindex="-1">
+    <header class="cs-alert-history-header"><div><div class="eyebrow">LIVE NBA ALERTS</div><h2 id="alertsHistoryTitle">NOTIFICATION HISTORY.</h2><p id="alertsHistoryStatus">Monitoring status</p></div><button type="button" id="alertsHistoryClose" class="cs-profile-close" aria-label="Close notification history">×</button></header>
+    <div id="alertsHistoryEntries" class="cs-alert-history-list"></div>
+    <footer class="cs-alert-history-footer">Last 50 alerts this session · Alerts don't start streams automatically. <button type="button" class="control" id="alertsHistorySettings">Alert settings</button></footer>
+  </section>
+</div>
+
+<!-- Team profile is a separate, non-destructive overlay above the video viewer. -->
+<div class="cs-profile-modal" id="teamProfileModal" hidden>
+  <div class="cs-profile-backdrop" id="teamProfileBackdrop"></div>
+  <section class="cs-profile-dialog" id="teamProfileDialog" role="dialog" aria-modal="true" aria-labelledby="teamProfileTitle" tabindex="-1">
+    <header class="cs-profile-heading">
+      <div id="teamProfileLogo"></div>
+      <div class="cs-profile-identity"><h2 id="teamProfileTitle">Team Profile</h2><p id="teamProfileSubtitle">NBA Team</p></div>
+      <button type="button" class="cs-profile-close" id="teamProfileClose" aria-label="Close team profile">×</button>
+    </header>
+    <nav class="cs-profile-tabs" role="tablist" aria-label="Team profile sections">
+      <button class="cs-profile-tab" type="button" role="tab" data-profile-tab="overview" aria-selected="true">Overview</button>
+      <button class="cs-profile-tab" type="button" role="tab" data-profile-tab="roster" aria-selected="false">Roster</button>
+      <button class="cs-profile-tab" type="button" role="tab" data-profile-tab="schedule" aria-selected="false">Schedule</button>
+    </nav>
+    <main class="cs-profile-content" id="teamProfileContent" role="tabpanel" aria-live="polite"></main>
+  </section>
+</div>
+
+<!-- Player profiles remain separate from the video viewer and reuse the team modal visual language. -->
+<div class="cs-profile-modal cs-athlete-modal" id="playerProfileModal" hidden>
+  <div class="cs-profile-backdrop" id="playerProfileBackdrop"></div>
+  <section class="cs-profile-dialog" id="playerProfileDialog" role="dialog" aria-modal="true" aria-labelledby="playerProfileTitle" tabindex="-1">
+    <header class="cs-profile-heading">
+      <div id="playerProfilePortrait" class="cs-player-headshot-fallback" aria-hidden="true">NBA</div>
+      <div class="cs-profile-identity cs-athlete-identity">
+        <div class="cs-profile-kicker">NBA PLAYER · CURRENT SEASON</div>
+        <h2 id="playerProfileTitle">Player Profile</h2>
+        <p id="playerProfileSubtitle">2026–27 NBA</p>
+      </div>
+      <button type="button" class="cs-player-return" id="playerBackTeam" hidden>← Back to team</button>
+      <button type="button" class="cs-profile-close" id="playerProfileClose" aria-label="Close player profile">×</button>
+    </header>
+    <nav class="cs-profile-tabs" role="tablist" aria-label="Player profile sections">
+      <button class="cs-profile-tab" type="button" role="tab" id="playerTabOverview" aria-controls="playerProfileContent" data-player-tab="overview" aria-selected="true">Overview</button>
+      <button class="cs-profile-tab" type="button" role="tab" id="playerTabGamelog" aria-controls="playerProfileContent" data-player-tab="gamelog" aria-selected="false">Game Log</button>
+      <button class="cs-profile-tab" type="button" role="tab" id="playerTabSeason" aria-controls="playerProfileContent" data-player-tab="season" aria-selected="false">Season Stats</button>
+    </nav>
+    <main class="cs-profile-content" id="playerProfileContent" role="tabpanel" aria-live="polite"></main>
+  </section>
+</div>
+
+<script>__COURTSIDE_INLINE_SCRIPT__</script>
+</body>
+</html>

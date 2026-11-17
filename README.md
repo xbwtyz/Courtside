@@ -155,13 +155,15 @@ npm test
 npm run verify:baseline
 npm run build
 npm run test:browser
+npm run release:prepare
+npm run release:verify
 ```
 
 The 47 original script fragments each have one build-time entry, one compiled IIFE in the final classic script, and a frozen `.legacy.js` reference. Run `npm run test:architecture` to confirm the source inventory, shared state ownership, deterministic release-candidate hash and the exact 1.6.1 baseline. Chromium browser tests also require Python 3 with Playwright and its Chromium browser installed (see `.github/workflows/ci.yml`).
 
 **Development output:** `dist/courtside.html`. **1.6.1 reconstruction:** `dist/courtside-legacy-proof.html`. Neither file needs to be committed. The original 1.6.1 SHA-256 is `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
 
-The modular 1.7 build is a **development candidate, not an approved release**. Before any merge, complete the live ESPN/stream-provider checks, manual Firefox `file://` validation, and `docs/REGRESSION_CHECKLIST_1.6.1.md`. Never merge to `main` without separate approval.
+**Courtside 1.7.0 is in release preparation on the refactor branch, not published to `main`.** To prepare the byte-identical single-file distribution after successful regression tests, run `npm run release:prepare`; to assert that committed `courtside.html` still equals a fresh build, run `npm run release:verify`. The build also supports frozen 1.6.1 output through its immutable `src/index.legacy.html` template. Human Firefox and live-provider smoke checks have been reported as passed; the full 104-case manual checklist remains separate. Never merge, tag, or publish a GitHub Release without explicit approval.
 
 ## Feedback
 

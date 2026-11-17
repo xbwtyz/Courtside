@@ -41,3 +41,11 @@ The test suite deliberately blocks third-party traffic. A green CI run **cannot*
 ## Audit constraints
 
 No source behavior changes, stream provider preference changes, polling cadence changes or CSS/interface alterations. Keep `main` at its pre-refactor commit until the user approves a separate merge. If future source work legitimately changes the release-candidate HTML SHA, update the recorded expected value and explain the change after repeating all gates.
+
+## v1.7.0 release preparation (after the Chunk 15 audit)
+
+The 498,206-byte SHA-256 `e284aa289128728a3121092a914697e00caada02b6dc3fcff1747a9b5cacad60` above describes the **pre-release-stamping** 1.7 modular candidate only. The v1.7.0 identity update changes the generated HTML; its new checksum will be recorded after CI.
+
+The visible v1.7.0 title, header, Settings footer, What's New metadata/history, Data Log export version, and `package.json`/lockfile are updated consistently. The exact 1.6.1 `src/index.legacy.html` source template and 47 frozen legacy fragments reconstruct the original baseline without alteration. `npm run release:prepare` copies a freshly compiled HTML to the repository-root `courtside.html`; `npm run release:verify` compares root and output bytes and SHA. Root publishing is only performed on `refactor/modular-1.7` during release preparation, never on `main`.
+
+The six Firefox smoke checks (startup, scores, player profile, League Leaders, viewer/streams, and settings persistence) were reported passed by the project owner. The complete manual historical regression checklist remains outstanding; do not state it is fully executed. No merge, tag, or release publication has been authorized.

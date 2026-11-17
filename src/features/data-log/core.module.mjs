@@ -1,3 +1,4 @@
+import { RELEASE_VERSION } from '../../release/version.mjs';
 /**
  * Data Log observation and UI reconciliation. This factory is constructed at the
  * original script position, with the existing ESPN queue injected. It never polls
@@ -343,7 +344,7 @@ export function createDataLog({$,document,window,performance,Date,URL,Blob,Map,W
     dataLogPerfSample('renderMs',performance.now()-started);
   }
   function dataLogExport(){
-    const payload={app:'Courtside',version:'1.6.1',exportedAt:dataLogNow(),scope:'ESPN requests only',
+    const payload={app:'Courtside',version:RELEASE_VERSION,exportedAt:dataLogNow(),scope:'ESPN requests only',
       retained:dataLog.entries.length,dropped:dataLog.dropped,paused:dataLog.paused,
       diagnostics:{snapshots:dataLog.snapshots.size,snapshotRecords:dataLog.snapshotRecords,estimatedSnapshotBytes:dataLog.snapshotBytes,snapshotEvictions:dataLog.snapshotEvictions,
         averageCompareMs:dataLog.compareMs.length?dataLog.compareMs.reduce((a,b)=>a+b,0)/dataLog.compareMs.length:null},

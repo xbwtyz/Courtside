@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { createContext, runInContext } from 'node:vm';
 import { createWhatsNew } from '../src/features/whats-new/module.mjs';
+import { COURTSIDE_RELEASE, WHATS_NEW_RELEASES } from '../src/features/whats-new/releases.module.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const originalReleases = await readFile(join(root, 'src/features/whats-new/releases.legacy.js'), 'utf8');
@@ -104,4 +105,18 @@ test('separate instances have isolated mutable selection/read state', () => {
 test('storage-denied conditions match the old controller and still render release notes', () => {
   const a=setup({storageBlocked:true}), b=setup({storageBlocked:true});
   assert.deepEqual(travel(modern(a), a), travel(legacy(b), b));
+});
+
+test('1.7.0 What's New entry is current, historical 1.6.1 is preserved, and it can be marked read',()=>{
+  assert.equal(COURTSIDE_RELEASE,'1.7.0');
+  assert.equal(WHATS_NEW_RELEASES.length,18);
+  assert.deepEqual(WHATS_NEW_RELEASES.slice(0,3).map(x=>x.version),['1.7.0','1.6.1','1.6']);
+  const env=setup(),api=createWhatsNew({$:env.$,safe:env.safe,releases:WHATS_NEW_RELEASES,currentRelease:COURTSIDE_RELEASE,getStorage:()=>env.storage});
+  api.initWhatsNew();
+  assert.equal(env.$('whatsNewVersion').value,'1.7.0');
+  assert.match(env.$('whatsNewDetails').innerHTML,/Modular Architecture &amp; Stability|Modular Architecture & Stability/);
+  assert.equal(env.$('whatsNewMainDot').hidden,false);
+  api.markWhatsNewRead();
+  assert.equal(env.kv.get('courtside.whatsnew.seen.v1'),'1.7.0');
+  assert.equal(env.$('whatsNewMainDot').hidden,true);
 });

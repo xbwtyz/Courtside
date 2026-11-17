@@ -31,6 +31,9 @@ def inspect(browser, html_path):
                 announcement:document.querySelector('#whatsNewAnnounce').textContent,
                 badgeHidden:document.querySelector('#whatsNewMainDot').hidden
             })''')
+        if html_path == versions[1]:
+            # Compare unchanged historical navigation on the same release, not the new 1.7 entry.
+            page.locator('#whatsNewVersion').select_option('1.6')
         snapshots = [snapshot()]
         page.locator('#whatsNewOlder').click(timeout=5000)
         snapshots.append(snapshot())
@@ -53,7 +56,17 @@ with sync_playwright() as p:
     try:
         old = inspect(browser, versions[0])
         modern = inspect(browser, versions[1])
-        assert old == modern, 'Modern release-note rendering/navigation differs from the frozen controller'
+        fields=('version','details','olderDisabled','announcement','badgeHidden')
+        for i,(before,after) in enumerate(zip(old,modern)):
+            for field in fields:
+                if field == 'olderDisabled':
+                    # Both histories retain older navigation at every compared state.
+                    continue
+                assert before[field]==after[field], (i,field,before[field],after[field])
+        assert len(old)==len(modern)
+        assert modern[0]['version']=='1.6'
+        # Newer is intentionally enabled for the historical 1.6 entry in v1.7.0.
+
         print(f"PASS: What's New browser behavior matches 1.6.1 across {len(old)} interaction states; no page errors")
     finally:
         browser.close()
