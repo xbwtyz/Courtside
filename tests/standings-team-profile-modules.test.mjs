@@ -100,6 +100,7 @@ async function make(mode){
      '\n'+(await source('src/features/team-profile/handlers.legacy.js'))+
      '\nglobalThis.api={STANDINGS_API,TEAM_API,teamDirectory,standingsState,profileState,simpleId,statNumber,parseStandings,standStat,renderConference,renderStandings,fetchStandings,fetchFeatureJson,setMainView,mainView:()=>mainView,profileSeasonYear,fetchTeamData,parseTeamSchedule,scheduleScoreNumber,renderTeamProfile,openTeamProfile,closeTeamProfile,selectTeamProfileTab};',ctx);
    st=ctx.api;profile=ctx.api;
+   h.getView=()=>runInContext('mainView',ctx);
  }
  return {...h,st,profile};
 }
@@ -115,7 +116,7 @@ function examine(h){
 }
 test('conference grouping, team directory, schedule score objects, profile calendar and HTML match frozen v1.6.1',async()=>{
  const old=examine(await make('legacy')),mod=examine(await make('modular'));
- assert.deepEqual(mod,old);
+ assert.deepEqual(clone(mod),clone(old));
  assert.deepEqual(mod.groups.map(x=>x.name),['Eastern Conference','Western Conference']);
  assert.deepEqual(mod.scores,[107,111,99,null,null,null]);
  assert.equal(mod.schedule[0].score,'108–104');
@@ -141,7 +142,7 @@ function renderTrace(h){
 }
 test('standings view, roster, schedule, team modal and cached render paths match frozen v1.6.1',async()=>{
  const old=renderTrace(await make('legacy')),mod=renderTrace(await make('modular'));
- assert.deepEqual(mod,old);
+ assert.deepEqual(clone(mod),clone(old));
  assert.equal(mod.view,'standings');
  assert.match(mod.roster,/Jayson Tatum/);
  assert.match(mod.schedule,/108–104/);
@@ -172,7 +173,7 @@ async function requestTrace(h){
 }
 test('standings and team roster deduplication, 14s timeouts and TTL match original request behavior',async()=>{
  const before=await requestTrace(await make('legacy')),after=await requestTrace(await make('modular'));
- assert.deepEqual(after,before);
+ assert.deepEqual(clone(after),clone(before));
  assert.equal(after.inFlight.requests,1);
  assert.deepEqual(after.inFlight.timer,[14000]);
  assert.equal(after.afterStart,2);

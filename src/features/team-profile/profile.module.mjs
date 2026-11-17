@@ -1,5 +1,5 @@
 /** Team profile requests, schedule/roster normalization and accessible dialog lifecycle. */
-export function createTeamProfile({$,document,Date,Number,String,Array,getState,profileState,teamDirectory,standingsState,TEAM_API,TEAM_DETAILS_TTL_MS,safe,safeLogo,simpleId,statNumber,standStat,fetchFeatureJson,dataLogObserve,dataLogTeamRecords,dataLogInvalid,fetchStandings}){
+export function createTeamProfile({$,document,Date,Number,String,Array,getState,profileState,teamDirectory,standingsState,TEAM_API,TEAM_DETAILS_TTL_MS,safe,safeLogo,simpleId,statNumber,standStat,fetchFeatureJson,dataLogObserve,dataLogTeamRecords,dataLogInvalid,fetchStandings,teamLogoMarkup}){
   function profileTeam(){
     const id=profileState.id;
     return teamDirectory.get(id)||{id,name:`NBA Team ${id}`,abbr:'NBA',values:{},logo:''};

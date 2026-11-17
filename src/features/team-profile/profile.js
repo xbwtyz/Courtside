@@ -10,7 +10,8 @@
     dataLogObserve:(...args)=>dataLogObserve(...args),
     dataLogTeamRecords:(...args)=>dataLogTeamRecords(...args),
     dataLogInvalid:(...args)=>dataLogInvalid(...args),
-    fetchStandings:(...args)=>fetchStandings(...args)
+    fetchStandings:(...args)=>fetchStandings(...args),
+    teamLogoMarkup:(...args)=>teamLogoMarkup(...args)
   });
   function profileTeam(...args){return teamProfileApi.profileTeam(...args);}
   function profileSeasonYear(...args){return teamProfileApi.profileSeasonYear(...args);}
