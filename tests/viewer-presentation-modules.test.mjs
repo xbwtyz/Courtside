@@ -23,7 +23,7 @@ function environment(){
     querySelectorAll:selector=>selector==='[data-layout]'?[$('layout1'),$('layout2')]:[]};
   function $(id){
     if(!elements.has(id)){
-      const node={id,hidden:id==='viewer',checked:false,addEventListener:(type,fn)=>handlers.set(id+':'+type,fn),
+      const node={id,hidden:id==='viewer',checked:false,dataset:{layout:id==='layout1'?'1':id==='layout2'?'2':undefined},addEventListener:(type,fn)=>handlers.set(id+':'+type,fn),
         focus(){document.activeElement=this;},closest:()=>null,
         querySelectorAll:selector=>id==='viewerDialog'?[$('focusFirst'),$('focusLast')]:[]};
       elements.set(id,node);
