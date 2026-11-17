@@ -44,7 +44,7 @@ No source behavior changes, stream provider preference changes, polling cadence 
 
 ## v1.7.0 release preparation (after the Chunk 15 audit)
 
-The 498,206-byte SHA-256 `e284aa289128728a3121092a914697e00caada02b6dc3fcff1747a9b5cacad60` above describes the **pre-release-stamping** 1.7 modular candidate only. The v1.7.0 identity update changes the generated HTML; its new checksum will be recorded after CI.
+The 498,206-byte SHA-256 `e284aa289128728a3121092a914697e00caada02b6dc3fcff1747a9b5cacad60` above describes the **pre-release-stamping** 1.7 modular candidate only. The v1.7.0 identity update changes the generated HTML; the current, fully tested v1.7.0 artifact is **499,291 bytes**, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526` (Github Actions run [44030781875](https://github.com/xbwtyz/Courtside/actions/runs/44030781875)). The root `courtside.html` file has been generated and committed only on the refactor branch.
 
 The visible v1.7.0 title, header, Settings footer, What's New metadata/history, Data Log export version, and `package.json`/lockfile are updated consistently. The exact 1.6.1 `src/index.legacy.html` source template and 47 frozen legacy fragments reconstruct the original baseline without alteration. `npm run release:prepare` copies a freshly compiled HTML to the repository-root `courtside.html`; `npm run release:verify` compares root and output bytes and SHA. Root publishing is only performed on `refactor/modular-1.7` during release preparation, never on `main`.
 

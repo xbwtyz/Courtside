@@ -10,7 +10,7 @@ import {
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const originalSha = '0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e';
-// The v1.7.0 release SHA is pinned after the first fully tested build.
+const candidateSha = 'c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526';
 const read = path => readFile(join(root, path), 'utf8');
 
 test('Architecture audit: all 47 original fragment markers are registered once and bundled once', async () => {
@@ -130,8 +130,9 @@ test('Architecture audit: deterministic modern candidate and immutable original 
   const second = await readFile(repeat.path);
   assert.ok(first.equals(second), 'Two back-to-back builds must match byte for byte');
   assert.equal(modern.sha256, repeat.sha256);
-  assert.ok(modern.bytes > 450000, 'Release candidate unexpectedly shrank');
-  assert.equal(createHash('sha256').update(second).digest('hex'), repeat.sha256);
+  assert.equal(modern.bytes, 499291, 'Release candidate byte length changed');
+  assert.equal(repeat.sha256, candidateSha, 'Release-candidate checksum changed unexpectedly');
+  assert.equal(createHash('sha256').update(second).digest('hex'), candidateSha);
   assert.match(second.toString('utf8'), /Courtside 1\.7\.0 — Live NBA Scores/);
   const html = second.toString('utf8');
   assert.equal((html.match(/<style\b/gi) || []).length, 1);

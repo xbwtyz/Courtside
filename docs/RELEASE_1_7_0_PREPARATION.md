@@ -21,8 +21,16 @@ The app's visible browser title, header, Settings footer, What's New current rel
 - [x] Modular Node, syntax, and offline Chromium regression suites (automated prior to release stamping; rerun required)
 - [x] Firefox standalone startup, screens, player stats, leaderboard, viewer/source selection, and settings persistence (six smoke cases **reported by owner**)
 - [ ] All historical manual checks in `docs/REGRESSION_CHECKLIST_1.6.1.md` (not reported complete)
-- [ ] Review regenerated v1.7.0 artifact checksum and executable source-vs-root parity
+- [x] Review regenerated v1.7.0 artifact checksum and executable source-vs-root parity — 499,291 bytes, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526` (CI-confirmed)
 - [ ] Review PR and provide separate merge approval
 - [ ] Upon approval only: merge, tag v1.7.0, publish a GitHub Release and verify artifact link
 
 **External API/stream-provider checks are point-in-time; availability can change.**
+
+## Final verified 1.7.0 candidate
+
+- GitHub Actions: https://github.com/xbwtyz/Courtside/actions/runs/44030781875 — **136/136 Node tests passed, full offline Chromium regression suite passed, baseline verified, and root distribution generated and checked.**
+- Final HTML: **499,291 bytes**, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526`.
+- Current refactor-branch root HTML: `courtside.html` (committed by guarded GitHub Actions, commit `a85c677affd7e4e6edb02bfe48b71398bcc221c5`)
+- Root HTML is **not** on `main` yet; the PR remains a draft. No tag or GitHub Release created.
+- The six Firefox smoke checks are owner-reported and must not be confused with executing all 104 manual regression checks.
