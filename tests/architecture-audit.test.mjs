@@ -107,6 +107,22 @@ test('Architecture audit: shared Game Center, standings, players and leaders kee
   assert.doesNotMatch(leaderRender, /\bconst leaderState\s*=/);
 });
 
+test('Architecture audit: exact esbuild dependency tree is locked with integrity hashes', async () => {
+  const pkg = JSON.parse(await read('package.json'));
+  const lock = JSON.parse(await read('package-lock.json'));
+  assert.equal(lock.lockfileVersion, 3);
+  assert.equal(lock.name, pkg.name);
+  assert.equal(lock.version, pkg.version);
+  assert.deepEqual(lock.packages[''].devDependencies, pkg.devDependencies);
+  assert.equal(lock.packages['node_modules/esbuild'].version, '0.28.2');
+  for (const [path, dep] of Object.entries(lock.packages)) {
+    if (path === '') continue;
+    assert.equal(dep.version, '0.28.2', 'Unexpected dependency version: ' + path);
+    assert.match(dep.integrity, /^sha512-[A-Za-z0-9+/]+={0,2}$/, 'Missing npm checksum for ' + path);
+  }
+  assert.equal(Object.keys(lock.packages).length, 28);
+});
+
 test('Architecture audit: deterministic modern candidate and immutable original 1.6.1 HTML', async () => {
   const modern = await build();
   const first = await readFile(modern.path);
