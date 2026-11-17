@@ -136,7 +136,7 @@ async function controllerEnv(modern){
   if(modern)api=createGameCenterController(deps);
   else{
     const ctx=createContext({...deps,state});
-    runInContext((await source('src/features/game-center/controller.legacy.js'))+'\nglobalThis.api={updateStatsSidebar,setStatsTab};',ctx);
+    runInContext((await source('src/features/game-center/controller.pre-module.js'))+'\nglobalThis.api={updateStatsSidebar,setStatsTab};',ctx);
     api=ctx.api;
   }
   return {api,viewerState,state,espnPoll,statsPoll,$,events,pending};
