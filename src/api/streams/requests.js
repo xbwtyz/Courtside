@@ -1,4 +1,4 @@
-  const {validAuraUrl,validPpvUrl,validMatchoraUrl,matchSources,matchLabel,fetchAuraSchedule,flattenPpvEvents,fetchPpvStreams,fetchMatchoraSchedule}=CourtsideStreamRequests.createStreamRequests({
+  let {validAuraUrl,validPpvUrl,validMatchoraUrl,matchSources,matchLabel,fetchAuraSchedule,flattenPpvEvents,fetchPpvStreams,fetchMatchoraSchedule}=CourtsideStreamRequests.createStreamRequests({
     cache:{
       get auraGames(){return auraGames;},set auraGames(value){auraGames=value;},
       get auraUpdatedAt(){return auraUpdatedAt;},set auraUpdatedAt(value){auraUpdatedAt=value;},
