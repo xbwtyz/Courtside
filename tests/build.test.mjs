@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { Script } from 'node:vm';
 import { build } from '../scripts/build.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -28,4 +29,29 @@ test('Final artifact contains inlined CSS and JS, not source placeholders or mod
   assert.doesNotMatch(html, /<script[^>]+\bsrc\s*=/i);
   assert.doesNotMatch(html, /<script[^>]+\btype\s*=\s*["']module/i);
   assert.match(html, /Courtside 1\.6\.1/);
+});
+
+
+test('Phase 3 extracts both features into named source files without changing their behavior', async () => {
+  const host = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
+  const parts = [
+    ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js', 'function dataLogCompare('],
+    ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js', 'function alertsObserveScoreboard('],
+    ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js', "$('dataLogExport').addEventListener"],
+  ];
+  for (const [marker, path, expected] of parts) {
+    assert.equal(host.split(marker).length - 1, 1, `${marker} should appear once`);
+    const text = await readFile(join(root, path), 'utf8');
+    assert.ok(text.includes(expected), `${path} should contain ${expected}`);
+  }
+});
+
+test('The generated browser script parses without adding import or export statements', async () => {
+  const result = await build({ verifyBaseline: true });
+  const html = await readFile(result.path, 'utf8');
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match, 'Classic application script should remain inline');
+  assert.doesNotMatch(match[1], /__COURTSIDE_(?:DATA_LOG|LIVE_ALERTS)_/);
+  assert.doesNotMatch(match[1], /(^|\n)\s*(?:import\s|export\s)/);
+  assert.doesNotThrow(() => new Script(match[1]));
 });

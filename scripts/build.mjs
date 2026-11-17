@@ -7,6 +7,13 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const cssMarker = '__COURTSIDE_INLINE_STYLES__';
 const jsMarker = '__COURTSIDE_INLINE_SCRIPT__';
 const target = join(root, 'dist', 'courtside.html');
+// Feature fragments are concatenated back into the original classic script scope.
+// This maintains exact execution order and does NOT require runtime ES module loading.
+const featureFragments = [
+  ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js'],
+  ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js'],
+  ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js'],
+];
 
 function replaceExactlyOnce(template, marker, content) {
   const first = template.indexOf(marker);
@@ -22,7 +29,12 @@ export async function build({ verifyBaseline = false } = {}) {
     readFile(join(root, 'src/styles/main.css'), 'utf8'),
     readFile(join(root, 'src/scripts/app.js'), 'utf8'),
   ]);
-  const html = replaceExactlyOnce(replaceExactlyOnce(template, cssMarker, css), jsMarker, js);
+  let compiledJs = js;
+  for (const [marker, sourcePath] of featureFragments) {
+    const fragment = await readFile(join(root, sourcePath), 'utf8');
+    compiledJs = replaceExactlyOnce(compiledJs, marker, fragment);
+  }
+  const html = replaceExactlyOnce(replaceExactlyOnce(template, cssMarker, css), jsMarker, compiledJs);
   const output = Buffer.from(html, 'utf8');
   if (verifyBaseline) {
     const baseline = await readFile(join(root, 'baseline/courtside_1.6.1.html'));
