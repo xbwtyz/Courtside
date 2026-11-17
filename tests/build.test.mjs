@@ -290,3 +290,25 @@ test('Chunk 02 bundles five Settings/release-history modules without runtime imp
   assert.ok((await readFile(legacy.path)).equals(baseline));
   assert.equal(await readFile(modern.path,'utf8'),html,'Legacy verification must not overwrite modern build');
 });
+
+test('Chunk 06 bundles Viewer presentation/navigation but keeps original classic-script positions',async()=>{
+  const modular=await build();
+  const html=await readFile(modular.path,'utf8');
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+  for(const [name,path] of [
+    ['CourtsideViewerTitle','src/features/viewer/title.js'],
+    ['CourtsideViewerControls','src/features/viewer/controls.js'],
+    ['CourtsideViewerKeyboard','src/features/viewer/keyboard.js'],
+    ['CourtsideTickerClicks','src/features/ticker/clicks.js'],
+    ['CourtsideMainNavigation','src/core/main-navigation.js']
+  ]){
+    assert.match(html,new RegExp(name));
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(name));
+    const frozen=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.ok(frozen.length>100);
+  }
+  assert.equal((html.match(/<script\\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+});

@@ -11,6 +11,31 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/features/viewer/title.js', {
+    entry: join(root, 'src/features/viewer/title.entry.mjs'),
+    name: 'CourtsideViewerTitle',
+    legacy: 'src/features/viewer/title.legacy.js',
+  }],
+  ['src/features/viewer/controls.js', {
+    entry: join(root, 'src/features/viewer/controls.entry.mjs'),
+    name: 'CourtsideViewerControls',
+    legacy: 'src/features/viewer/controls.legacy.js',
+  }],
+  ['src/features/viewer/keyboard.js', {
+    entry: join(root, 'src/features/viewer/keyboard.entry.mjs'),
+    name: 'CourtsideViewerKeyboard',
+    legacy: 'src/features/viewer/keyboard.legacy.js',
+  }],
+  ['src/features/ticker/clicks.js', {
+    entry: join(root, 'src/features/ticker/clicks.entry.mjs'),
+    name: 'CourtsideTickerClicks',
+    legacy: 'src/features/ticker/clicks.legacy.js',
+  }],
+  ['src/core/main-navigation.js', {
+    entry: join(root, 'src/core/main-navigation.entry.mjs'),
+    name: 'CourtsideMainNavigation',
+    legacy: 'src/core/main-navigation.legacy.js',
+  }],
   ['src/api/streams/config.js', {
     entry: join(root, 'src/api/streams/config.entry.mjs'),
     name: 'CourtsideStreamConfig',
