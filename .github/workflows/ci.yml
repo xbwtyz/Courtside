@@ -20,3 +20,5 @@ jobs:
         run: npm test
       - name: Verify unchanged standalone artifact
         run: npm run verify:baseline
+      - name: Build modular pilot distributable
+        run: npm run build

@@ -2,11 +2,13 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolve, join } from 'node:path';
+import { createWhatsNew } from '../src/features/whats-new/module.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cssMarker = '__COURTSIDE_INLINE_STYLES__';
 const jsMarker = '__COURTSIDE_INLINE_SCRIPT__';
 const target = join(root, 'dist', 'courtside.html');
+const whatsNewPath = 'src/features/whats-new/controller.js';
 // Feature fragments are concatenated back into the original classic script scope.
 // This maintains exact execution order and does NOT require runtime ES module loading.
 const featureFragments = [
@@ -75,7 +77,21 @@ export async function build({ verifyBaseline = false } = {}) {
   ]);
   let compiledJs = js;
   for (const [marker, sourcePath] of featureFragments) {
-    const fragment = await readFile(join(root, sourcePath), 'utf8');
+    let fragment = await readFile(join(root, sourcePath), 'utf8');
+    if (sourcePath === whatsNewPath) {
+      if (verifyBaseline) {
+        // Frozen Phase 3-era controller: only used to prove untouched reference parity.
+        fragment = await readFile(join(root, 'src/features/whats-new/controller.legacy.js'), 'utf8');
+      } else {
+        // One-module bridge: native ESM import at build time, self-contained factory
+        // embedded in the classic inline browser script (no runtime imports/CORS).
+        const factory = createWhatsNew.toString();
+        if (!factory.startsWith('function createWhatsNew(') || factory.includes('[native code]')) {
+          throw new Error("What's New factory is not a serializable source function");
+        }
+        fragment = `  const createWhatsNew = ${factory};\n${fragment}`;
+      }
+    }
     compiledJs = replaceExactlyOnce(compiledJs, marker, fragment);
   }
   const html = replaceExactlyOnce(replaceExactlyOnce(template, cssMarker, css), jsMarker, compiledJs);
@@ -87,8 +103,9 @@ export async function build({ verifyBaseline = false } = {}) {
     }
   }
   await mkdir(join(root, 'dist'), { recursive: true });
-  await writeFile(target, output);
-  return { path: target, bytes: output.length, sha256: createHash('sha256').update(output).digest('hex') };
+  const outputPath = verifyBaseline ? join(root, 'dist', 'courtside-legacy-proof.html') : target;
+  await writeFile(outputPath, output);
+  return { path: outputPath, bytes: output.length, sha256: createHash('sha256').update(output).digest('hex') };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
