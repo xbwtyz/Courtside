@@ -1,0 +1,81 @@
+name: Publish Courtside v1.7.0
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-v1.7.0.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.event.head_commit.message == 'chore(release): publish Courtside v1.7.0'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the approved merged source
+        uses: actions/checkout@v4
+        with:
+          ref: a79aada8b743e735fa83d33e937796070b08a7a7
+          persist-credentials: false
+      - name: Verify pinned source and release HTML
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "a79aada8b743e735fa83d33e937796070b08a7a7"
+          test "$(wc -c < courtside.html)" -eq 499291
+          printf '%s  %s\n' 'c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526' 'courtside.html' | sha256sum --check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run release gates
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check:syntax
+          npm test
+          npm run verify:baseline
+          npm run release:verify
+      - name: Write release notes
+        run: |
+          cat > /tmp/release-notes.md <<'EOF'
+          ## Courtside v1.7.0 — Modular Architecture & Stability
+
+          Courtside 1.7.0 keeps its NBA scoreboard, Game Center and charts, player profiles, League Leaders, viewer, Live Alerts, Data Log, and settings, while making the source easier to extend.
+
+          ### Improvements
+          - 47 build-time JavaScript module factories with one standalone output.
+          - Deterministic, locked builds and exact v1.6.1 baseline protection.
+          - Automated regression, release identity, architecture, and distribution checks.
+          - No installation, build tools, framework, or server required for end users.
+
+          ### Download
+          Download **courtside.html** from the Assets section below and open it directly in Firefox or another modern browser. An internet connection is required for live scores, stats, and third-party playback.
+
+          ### Verification
+          136 Node tests and the offline Chromium suite passed in preparation. Six owner-run Firefox smoke checks also passed; the complete historical manual checklist remains unverified.
+
+          Release HTML: 499,291 bytes, SHA-256 c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526.
+          Source commit: a79aada8b743e735fa83d33e937796070b08a7a7.
+
+          External providers and embedded streams may change or be unavailable.
+          EOF
+      - name: Publish tagged release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view v1.7.0 >/dev/null 2>&1; then
+            echo "Release already exists; refusing to overwrite."
+            exit 1
+          fi
+          gh release create v1.7.0 courtside.html \
+            --target a79aada8b743e735fa83d33e937796070b08a7a7 \
+            --title "Courtside v1.7.0" \
+            --notes-file /tmp/release-notes.md \
+            --latest
+      - name: Verify published tag and downloadable asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.7.0" --jq '.object.sha')"
+          test "$tag_sha" = "a79aada8b743e735fa83d33e937796070b08a7a7"
+          mkdir -p /tmp/courtside-release-verify
+          gh release download v1.7.0 -p courtside.html -D /tmp/courtside-release-verify
+          printf '%s  %s\n' 'c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526' '/tmp/courtside-release-verify/courtside.html' | sha256sum --check
