@@ -144,7 +144,7 @@ function evaluate(f){
 test('Game Center player parsing, wide/compact sorting, comparisons, overview and charts match frozen 1.6.1',async()=>{
   const old=evaluate(await setup('legacy'));
   const mod=evaluate(await setup('modular'));
-  assert.deepEqual(mod,old);
+  assert.deepEqual(clone(mod),clone(old));
   assert.equal(mod.playerGroups.length,2);
   assert.equal(mod.model.lead,3);
   assert.equal(mod.model.probability,3);
@@ -171,7 +171,7 @@ test('chart model rejects invalid clock, coordinates, and win-probability record
       clock:[api.chartClock('3:15'),api.chartClock('2:70'),api.chartClock('invalid')],
       numbers:[api.chartNumber(null),api.chartNumber('25'),api.chartNumber(true)]};
   }
-  assert.deepEqual(inspect(after),inspect(before));
+  assert.deepEqual(clone(inspect(after)),clone(inspect(before)));
 });
 test('shared activeChart state remains wired to the classic adapter and Game Center renderer',async()=>{
   const charts=await readFile(join(root,'src/features/game-center/charts.js'),'utf8');
