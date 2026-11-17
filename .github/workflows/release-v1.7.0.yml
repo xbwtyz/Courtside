@@ -28,6 +28,7 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run check:syntax
+          npm run build
           npm test
           npm run verify:baseline
           npm run release:verify
