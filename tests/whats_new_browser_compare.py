@@ -3,6 +3,8 @@
 Requires generated dist/courtside.html and dist/courtside-legacy-proof.html.
 """
 from pathlib import Path
+import os
+import shutil
 from playwright.sync_api import sync_playwright
 
 root = Path(__file__).resolve().parents[1]
@@ -46,7 +48,7 @@ def inspect(browser, html_path):
         page.close()
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True, executable_path='/usr/bin/chromium',
+    browser = p.chromium.launch(headless=True, executable_path=os.environ.get('COURTSIDE_CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or None,
         args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--no-first-run'])
     try:
         old = inspect(browser, versions[0])

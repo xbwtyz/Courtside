@@ -4,6 +4,8 @@ Renders the generated single-file application in memory and blocks external requ
 Does not assert that live ESPN or third-party video services are reachable.
 """
 from pathlib import Path
+import os
+import shutil
 import json
 from playwright.sync_api import sync_playwright
 
@@ -12,7 +14,7 @@ assert html.is_file(), 'Run npm run build before this optional browser smoke tes
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         headless=True,
-        executable_path='/usr/bin/chromium',
+        executable_path=os.environ.get('COURTSIDE_CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or None,
         args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-background-networking', '--no-first-run'],
     )
     page = browser.new_page(viewport={'width': 1440, 'height': 900})
