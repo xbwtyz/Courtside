@@ -136,11 +136,32 @@ Hosting the file makes the interface available online. External API access and e
 
 ## Technical notes and privacy
 
-The application consists of one HTML file containing its styles, application logic, and SVG rendering. It has no application backend, build toolchain, or external JavaScript chart library. Google Fonts and ESPN-hosted team logos are loaded externally.
+The application consists of one HTML file containing its styles, application logic, and SVG rendering. The delivered HTML has no application backend or runtime build tooling, and uses no external JavaScript chart library. Developers of the 1.7 source branch use esbuild to produce this standalone artifact. Google Fonts and ESPN-hosted team logos are loaded externally.
 
 The browser contacts ESPN, stream-index services, and embedded-player hosts directly. External players may make additional requests and use their own cookies or tracking. Running the app from a local file does not make those external services private or offline.
 
 The scoreboard refresh interval is saved in browser `localStorage` under `courtsideRefreshInterval`. Game summaries and provider indexes are cached in memory for the current page session. Video is not downloaded or recorded by Courtside.
+
+## Development: Courtside 1.7 modular source
+
+> The **downloaded HTML requires no installation, build tooling or server**. The 1.7 source branch uses a build-time toolchain to preserve that single-file delivery format. These instructions apply to `refactor/modular-1.7`, not the current published `main` branch.
+
+Use **Node.js 22** and the checked-in npm lockfile:
+
+```bash
+npm ci
+npm run check:syntax
+npm test
+npm run verify:baseline
+npm run build
+npm run test:browser
+```
+
+The 47 original script fragments each have one build-time entry, one compiled IIFE in the final classic script, and a frozen `.legacy.js` reference. Run `npm run test:architecture` to confirm the source inventory, shared state ownership, deterministic release-candidate hash and the exact 1.6.1 baseline. Chromium browser tests also require Python 3 with Playwright and its Chromium browser installed (see `.github/workflows/ci.yml`).
+
+**Development output:** `dist/courtside.html`. **1.6.1 reconstruction:** `dist/courtside-legacy-proof.html`. Neither file needs to be committed. The original 1.6.1 SHA-256 is `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
+
+The modular 1.7 build is a **development candidate, not an approved release**. Before any merge, complete the live ESPN/stream-provider checks, manual Firefox `file://` validation, and `docs/REGRESSION_CHECKLIST_1.6.1.md`. Never merge to `main` without separate approval.
 
 ## Feedback
 

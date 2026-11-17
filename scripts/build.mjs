@@ -10,7 +10,7 @@ const jsMarker = '__COURTSIDE_INLINE_SCRIPT__';
 const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
-const bundledFeatures = new Map([
+export const bundledFeatures = new Map([
   ['src/features/league-leaders/data.js', {
     entry: join(root, 'src/features/league-leaders/data.entry.mjs'),
     name: 'CourtsideLeagueLeadersData',
@@ -249,7 +249,7 @@ const bundledFeatures = new Map([
 ]);
 
 // Legacy byte-parity reconstruction also replaces the three migrated consumers.
-const legacyFragmentOverrides = new Map([
+export const legacyFragmentOverrides = new Map([
   ['src/features/scoreboard/data.js', 'src/features/scoreboard/data.legacy.js'],
   ['src/features/player-profile/dialog.js', 'src/features/player-profile/dialog.legacy.js'],
   ['src/features/game-center/controller.js', 'src/features/game-center/controller.legacy.js'],
@@ -278,7 +278,7 @@ async function buildFeatureBundle(feature) {
 }
 // Feature fragments are concatenated back into the original classic script scope.
 // This maintains exact execution order and does NOT require runtime ES module loading.
-const featureFragments = [
+export const featureFragments = [
   ['/*__COURTSIDE_ESPN_SCOREBOARD_ENDPOINT__*/', 'src/api/espn/endpoint.js'],
   ['/*__COURTSIDE_STREAM_PROVIDERS_CONFIG__*/', 'src/api/streams/config.js'],
   ['/*__COURTSIDE_CORE_DOM__*/', 'src/core/dom.js'],

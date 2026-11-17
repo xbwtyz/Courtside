@@ -1,0 +1,43 @@
+# Courtside 1.7 — Final integration audit
+
+**Source branch:** `refactor/modular-1.7` only. **Release state:** development candidate. **Published main:** unchanged.
+
+## Architecture inventory
+
+- **47 / 47** original insertion markers mapped to **47 / 47** unique build-time ES module entrypoints, distinct IIFE global exports, and frozen `.legacy.js` sources. The original script order is maintained by `featureFragments` in `scripts/build.mjs`.
+- The standalone HTML contains **one inline classic script, one inline stylesheet**, and **no runtime JavaScript module imports**. Network activity continues to be initiated by the same ESPN and stream-provider code; there is no backend or local server.
+- Shared state remains owned by the original core, standings/team profile, Game Center chart, player data, and League Leaders owners. Consumers use injected callback/getter interfaces rather than creating parallel cache objects.
+- 1.6.1 frozen baseline: **374,363 bytes**, SHA-256 `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
+- 1.7 Chunk 15 release-candidate artifact: **498,206 bytes**, SHA-256 `e284aa289128728a3121092a914697e00caada02b6dc3fcff1747a9b5cacad60`. This intentionally freezes the current 1.7 candidate for reproducibility checks; no user-visible feature work is authorized in this audit.
+
+## Automated gates
+
+The permanent `tests/architecture-audit.test.mjs` checks all module entries/source/legacy backups, their exact placeholders, IIFE globals and state owners, and repeats the modern build for byte-identical SHA-256 parity while rechecking the original 1.6.1 bytes. `npm test` includes it; it can also run separately with `npm run test:architecture`.
+
+Required CI steps (Node.js 22):
+
+1. Install the exact checked-in dependency graph with `npm ci`.
+2. `npm run check:syntax` and `npm test` (Node build, architecture and behavior parity).
+3. `npm run verify:baseline` (byte-level 1.6.1 proof).
+4. `npm run build` (single HTML artifact and release-candidate SHA).
+5. `npm run test:browser` (offline Chromium parity across prior chunks and League Leaders).
+
+## Release readiness / outstanding manual gates
+
+| Gate | Status / notes |
+| --- | --- |
+| 47 module inventory and complete original backups | **Automated** |
+| Standalone single-script build + deterministic artifact SHA | **Automated** |
+| Original 1.6.1 byte parity | **Automated** |
+| Node behavior tests and Chromium mock regression comparisons | **Automated** |
+| Live ESPN scoreboard/game summary/standings/player/leaders APIs | **Manual — outstanding** |
+| Live stream-provider listing and embed playback | **Manual — outstanding** |
+| Windows Firefox `file://`, popup, storage/privacy setting checks | **Manual — outstanding** |
+| Full human regression checklist in `docs/REGRESSION_CHECKLIST_1.6.1.md` | **Manual — outstanding** |
+| Merge to `main` or official 1.7 release | **NOT APPROVED** |
+
+The test suite deliberately blocks third-party traffic. A green CI run **cannot** establish availability, CORS permissions or iframe behavior of external providers on a live connection.
+
+## Audit constraints
+
+No source behavior changes, stream provider preference changes, polling cadence changes or CSS/interface alterations. Keep `main` at its pre-refactor commit until the user approves a separate merge. If future source work legitimately changes the release-candidate HTML SHA, update the recorded expected value and explain the change after repeating all gates.
