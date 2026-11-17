@@ -215,7 +215,8 @@ test('glossary is bundled as a private controller and legacy proof remains untou
   const html = await readFile(result.path,'utf8');
   assert.match(html, /CourtsideStatGlossary/);
   assert.match(html, /CourtsideStatGlossary\.createStatGlossary\(\{/);
-  assert.doesNotMatch(html, /src\/features\/stat-glossary\/module\.mjs/);
+  assert.doesNotMatch(html, /<script[^>]*\bsrc\s*=/i);
+  assert.doesNotMatch(html, /<script[^>]*\btype\s*=\s*["']module/i);
   const match = html.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(match);
   assert.doesNotThrow(()=>new Script(match[1]));
