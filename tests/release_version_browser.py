@@ -44,7 +44,7 @@ with sync_playwright() as pw:
   }""")
   assert version=={'version':'1.7.0','app':'Courtside','scope':'ESPN requests only'},version
   assert not errors,errors
-  print('PASS: v1.7.0 browser title, badge, footer, 18 What's New releases, old history and Data Log export agree')
+  print("PASS: v1.7.0 browser title, badge, footer, 18 What's New releases, old history and Data Log export agree")
  finally:
   page.close()
   browser.close()
