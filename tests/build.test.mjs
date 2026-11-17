@@ -142,3 +142,16 @@ test('Phase 3D stage 1 modular source files reconstruct at unique markers', asyn
   const result=await build({verifyBaseline:true});
   assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
 });
+
+
+test('Phase 3D stage 2 modular source files reconstruct at unique markers', async () => {
+  const app=await readFile(join(root,'src/scripts/app.js'),'utf8');
+  for(const [name,path] of [['PREFERENCES', 'src/features/settings/preferences.js'], ['CORE_UTILS', 'src/core/utils.js'], ['CORE_STATE', 'src/core/state.js'], ['SETTINGS_SHORTCUT', 'src/features/settings/shortcut.js'], ['WHATS_NEW_RELEASES', 'src/features/whats-new/releases.js'], ['WHATS_NEW_CONTROLLER', 'src/features/whats-new/controller.js'], ['SETTINGS_DIALOG', 'src/features/settings/dialog.js'], ['SETTINGS_INITIALIZATION', 'src/features/settings/initialization.js']]){
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1,marker);
+    const source=await readFile(join(root,path),'utf8');
+    assert.ok(source.length>30,path);
+  }
+  const result=await build({verifyBaseline:true});
+  assert.ok((await readFile(result.path)).equals(await readFile(join(root,'baseline/courtside_1.6.1.html'))));
+});
