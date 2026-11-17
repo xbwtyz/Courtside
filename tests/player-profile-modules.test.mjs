@@ -113,7 +113,7 @@ function modalTrace(f){
  api.playerState.cache.set('101|2027|stats',{at:Clock.now(),data:plain(stats),error:''});
  api.playerState.cache.set('101|2027|gamelog',{at:Clock.now(),data:plain(gamelog),error:''});
  const fromTeam=$('teamProfileModal');fromTeam.hidden=false;
- const link={dataset:{playerProfile:'101',playerName:'Jayson Tatum',playerTeam:'2',
+ const link={isConnected:true,dataset:{playerProfile:'101',playerName:'Jayson Tatum',playerTeam:'2',
   playerTeamName:'Boston Celtics',playerPos:'SF',playerJersey:'0'}};
  $('teamProfileContent').scrollTop=60;
  document.activeElement=link;
