@@ -107,7 +107,7 @@ test('storage-denied conditions match the old controller and still render releas
   assert.deepEqual(travel(modern(a), a), travel(legacy(b), b));
 });
 
-test('1.7.0 What's New entry is current, historical 1.6.1 is preserved, and it can be marked read',()=>{
+test("1.7.0 What's New entry is current, historical 1.6.1 is preserved, and it can be marked read",()=>{
   assert.equal(COURTSIDE_RELEASE,'1.7.0');
   assert.equal(WHATS_NEW_RELEASES.length,18);
   assert.deepEqual(WHATS_NEW_RELEASES.slice(0,3).map(x=>x.version),['1.7.0','1.6.1','1.6']);
