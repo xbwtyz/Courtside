@@ -63,3 +63,30 @@ test('Build reconstitutes source fragments at exact original positions', async (
   const output = await readFile(result.path);
   assert.ok(output.equals(original));
 });
+
+
+test('Phase 3B ESPN, scoreboard and ticker fragments have exactly one insertion point each', async () => {
+  const app = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
+  const paths = [
+    ['ESPN_SCOREBOARD_ENDPOINT','src/api/espn/endpoint.js'],
+    ['ESPN_CONFIG','src/api/espn/config.js'],
+    ['ESPN_REQUEST_SCHEDULER','src/api/espn/request-scheduler.js'],
+    ['ESPN_REFRESH_POLICY','src/api/espn/refresh-policy.js'],
+    ['ESPN_GAME_SUMMARY','src/api/espn/game-summary.js'],
+    ['SCOREBOARD_DATA','src/features/scoreboard/data.js'],
+    ['SCOREBOARD_RENDER','src/features/scoreboard/render.js'],
+    ['SCOREBOARD_CARD_CONTROLS','src/features/scoreboard/card-controls.js'],
+    ['SCOREBOARD_NAVIGATION','src/features/scoreboard/navigation.js'],
+    ['TICKER_CONTROLLER','src/features/ticker/controller.js'],
+    ['TICKER_CLICKS','src/features/ticker/clicks.js'],
+  ];
+  for (const [name,path] of paths) {
+    const marker = `/*__COURTSIDE_${name}__*/`;
+    assert.equal(app.split(marker).length-1,1, `Expected one ${name} marker`);
+    const section=await readFile(join(root,path),'utf8');
+    assert.ok(section.length>15,`Empty feature fragment: ${path}`);
+  }
+  const result = await build({verifyBaseline:true});
+  const output=await readFile(result.path,'utf8');
+  for (const [name] of paths) assert.ok(!output.includes(`/*__COURTSIDE_${name}__*/`));
+});
