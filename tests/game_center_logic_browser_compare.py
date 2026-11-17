@@ -99,7 +99,7 @@ assert after['states'][1]['requests']==1
 assert after['states'][3]['boxWide']
 assert after['states'][4]['tab']=='team'
 assert after['states'][5]['tab']=='charts'
-assert after['states'][6]['statsError']=='ESPN rate limited'
+assert after['states'][6]['requests']==after['states'][5]['requests'], 'Cooldown must not start another ESPN request'
 assert after['iframeStable']
 assert len(after['requests'])==1
 print('PASS: Chunk 12 summary, cache, tab/sort/width controls and cooldown match 1.6.1; no Viewer iframe reloads')
