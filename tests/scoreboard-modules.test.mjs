@@ -70,8 +70,8 @@ async function make(mode){
   }
   const renderSrc=await sourceFile('render'),controlSrc=await sourceFile('card-controls'),navSrc=await sourceFile('navigation');
   const context=createContext({$:f.$,document:f.document,Node:{ELEMENT_NODE:1,TEXT_NODE:3},
-    WeakMap,Date,state:f.state,safe:f.safe,safeLogo:f.safeLogo,...f.fns});
-  runInContext(renderSrc+'\nglobalThis.api={formatStart,getStatus,teamData,logoHTML,scoreHTML,detailHTML,gameCard,sectionHTML,patchGameDOM,reconcileGameSections,render,gameMarkupCache};\n'+controlSrc+'\n'+navSrc,context);
+    WeakMap,Date,state:f.state,safe:f.safe,safeLogo:f.safeLogo,...f.fns,callbackRender:f.fns.render});
+  runInContext(renderSrc+'\nglobalThis.api={formatStart,getStatus,teamData,logoHTML,scoreHTML,detailHTML,gameCard,sectionHTML,patchGameDOM,reconcileGameSections,render,gameMarkupCache};\n'+controlSrc+'\n'+navSrc+'\nrender=callbackRender;',context);
   return {...f,api:context.api};
 }
 test('renderer markup and status/score helpers exactly equal legacy across live, final, upcoming, and expanded cards',async()=>{
