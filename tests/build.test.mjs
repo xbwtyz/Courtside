@@ -35,13 +35,24 @@ test('Final artifact contains inlined CSS and JS, not source placeholders or mod
 test('Phase 3 extracts both features into named source files without changing their behavior', async () => {
   const host = await readFile(join(root, 'src/scripts/app.js'), 'utf8');
   const parts = [
-    ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js', 'function dataLogCompare('],
+    ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js', 'CourtsideDataLogCore.createDataLog('],
     ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js', 'function alertsObserveScoreboard('],
-    ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js', "$('dataLogExport').addEventListener"],
+    ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js', 'CourtsideDataLogControls.attachDataLogControls('],
   ];
   for (const [marker, path, expected] of parts) {
     assert.equal(host.split(marker).length - 1, 1, `${marker} should appear once`);
     const text = await readFile(join(root, path), 'utf8');
+    assert.ok(text.includes(expected), `${path} should contain ${expected}`);
+  }
+  // The original declarations still exist in exact frozen rollback sources,
+  // while the modular equivalents are independently testable at build time.
+  for (const [path, expected] of [
+    ['src/features/data-log/core.legacy.js', 'function dataLogCompare('],
+    ['src/features/data-log/core.module.mjs', 'function dataLogCompare('],
+    ['src/features/data-log/controls.legacy.js', "$('dataLogExport').addEventListener"],
+    ['src/features/data-log/controls.module.mjs', "$('dataLogExport').addEventListener"]
+  ]) {
+    const text = await readFile(join(root,path),'utf8');
     assert.ok(text.includes(expected), `${path} should contain ${expected}`);
   }
 });
