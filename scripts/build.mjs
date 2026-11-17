@@ -10,8 +10,13 @@ const target = join(root, 'dist', 'courtside.html');
 // Feature fragments are concatenated back into the original classic script scope.
 // This maintains exact execution order and does NOT require runtime ES module loading.
 const featureFragments = [
+  ['/*__COURTSIDE_ESPN_SCOREBOARD_ENDPOINT__*/', 'src/api/espn/endpoint.js'],
   ['/*__COURTSIDE_DATA_LOG_CORE__*/', 'src/features/data-log/core.js'],
   ['/*__COURTSIDE_LIVE_ALERTS__*/', 'src/features/live-alerts/alerts.js'],
+  ['/*__COURTSIDE_ESPN_CONFIG__*/', 'src/api/espn/config.js'],
+  ['/*__COURTSIDE_ESPN_REQUEST_SCHEDULER__*/', 'src/api/espn/request-scheduler.js'],
+  ['/*__COURTSIDE_ESPN_REFRESH_POLICY__*/', 'src/api/espn/refresh-policy.js'],
+  ['/*__COURTSIDE_ESPN_GAME_SUMMARY__*/', 'src/api/espn/game-summary.js'],
   ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js'],
 ];
 

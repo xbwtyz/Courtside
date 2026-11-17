@@ -55,3 +55,11 @@ test('The generated browser script parses without adding import or export statem
   assert.doesNotMatch(match[1], /(^|\n)\s*(?:import\s|export\s)/);
   assert.doesNotThrow(() => new Script(match[1]));
 });
+
+
+test('Build reconstitutes source fragments at exact original positions', async () => {
+  const result = await build({verifyBaseline:true});
+  const original = await readFile(join(root,'baseline/courtside_1.6.1.html'));
+  const output = await readFile(result.path);
+  assert.ok(output.equals(original));
+});

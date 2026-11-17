@@ -1,8 +1,6 @@
 
   'use strict';
-  // ESPN's unofficial public scoreboard endpoint (no API key). May change without notice.
-  const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
-  const AURA_API = 'https://aurasports.xyz/api/schedule';
+/*__COURTSIDE_ESPN_SCOREBOARD_ENDPOINT__*/  const AURA_API = 'https://aurasports.xyz/api/schedule';
   const AURA_TTL_MS = 2 * 60 * 1000;
   // PPV.st's public event index: return the iframe provided by the API, never synthesize one.
   const PPV_APIS = ['https://api.ppv.st/api/streams', 'https://api.ppv.to/api/streams'];
@@ -91,116 +89,7 @@
     chartView:'lead',shotTeam:'all',shotPlayer:'all',shotPeriod:'all',chartSelections:{lead:null,prob:null,shots:null},
     statsDisplayKey:null
   };
-  const SUMMARY_API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary';
-  const ESPN_LIVE_SCORES_MS=10*1000;
-  const ESPN_LIVE_STATS_MS=15*1000;
-  const ESPN_IDLE_MS=60*1000;
-  const ESPN_MAX_BACKOFF_MS=5*60*1000;
-  const espnPoll={sharedUntil:0,scoreFailures:0};
-  const statsPoll={gameId:null,nextAt:0,failures:0};
-
-
-  // Courtside 1.5.1 — priority-aware dispatch with full-response accounting.
-  // 0: scores, 1: active game, 2: profiles/standings, 3: bulk leaderboards.
-  // High-priority requests are serialized. One paced background request may
-  // overlap a NEW high-priority request, so a slow leaderboard response never
-  // prevents a live score from starting on time. At most two ESPN requests
-  // are active, and background pages never start while a high job is active.
-  // Callers resolve only after JSON parsing finishes, keeping slots honest.
-  const espnJobs=[];
-  let espnHighBusy=false,espnLeaderBusy=false,espnJobTimer=null;
-  let espnLeaderLastStart=0,espnJobOrdinal=0;
-  function requestESPN(work,priority=2){
-    return new Promise((resolve,reject)=>{
-      espnJobs.push({work,priority,resolve,reject,order:++espnJobOrdinal});
-      pumpESPN();
-    });
-  }
-  function startESPNJob(job){
-    const leader=job.priority===3;
-    if(leader){espnLeaderBusy=true;espnLeaderLastStart=Date.now();}
-    else espnHighBusy=true;
-    Promise.resolve().then(job.work).then(job.resolve,job.reject).finally(()=>{
-      if(leader)espnLeaderBusy=false;
-      else espnHighBusy=false;
-      pumpESPN();
-    });
-  }
-  function pumpESPN(){
-    if(espnJobTimer){clearTimeout(espnJobTimer);espnJobTimer=null;}
-    if(!espnJobs.length)return;
-    espnJobs.sort((a,b)=>a.priority-b.priority||a.order-b.order);
-    if(Date.now()<espnPoll.sharedUntil){
-      const until=new Date(espnPoll.sharedUntil).toLocaleTimeString();
-      while(espnJobs.length)espnJobs.shift().reject(new Error(`ESPN rate limited until ${until}`));
-      return;
-    }
-    if(!espnHighBusy && espnJobs[0].priority<3){
-      startESPNJob(espnJobs.shift());
-    }
-    // Defer background work until the high-priority lane has drained. A later
-    // high-priority arrival can bypass a slow in-flight background fetch.
-    if(espnHighBusy||espnLeaderBusy||!espnJobs.length||espnJobs[0].priority<3)return;
-    const wait=2600-(Date.now()-espnLeaderLastStart);
-    if(wait>0){espnJobTimer=setTimeout(pumpESPN,wait);return;}
-    startESPNJob(espnJobs.shift());
-  }
-
-  function exponentialBackoff(failures){
-    return Math.min(ESPN_MAX_BACKOFF_MS, 30000*Math.pow(2,Math.min(4,Math.max(0,failures-1))));
-  }
-  function retryAfterMs(value){
-    if(!value)return 0;
-    const numeric=Number(value.trim());
-    if(Number.isFinite(numeric)&&numeric>=0)return numeric*1000;
-    const parsed=Date.parse(value);
-    return Number.isFinite(parsed)?Math.max(0,parsed-Date.now()):0;
-  }
-  function noteEspnResponseError(response,channel){
-    if(response.status!==429 && !(response.status===503 && response.headers.get('Retry-After')))return;
-    const failures=channel==='scores'?espnPoll.scoreFailures+1:statsPoll.failures+1;
-    const retry=Math.max(retryAfterMs(response.headers.get('Retry-After')),exponentialBackoff(failures));
-    espnPoll.sharedUntil=Math.max(espnPoll.sharedUntil,Date.now()+retry);
-  }
-  function phaseForGameId(id){
-    const game=state.games.find(g=>String(g.id)===String(id));
-    if(game)return game._phase;
-    return viewerState.liveGames.some(g=>g.id===String(id))?'live':'upcoming';
-  }
-  function scoresRefreshMs(){
-    // A historical date with no games still doesn't require polling.
-    if(state.lastUpdated&&state.date<today()&&state.games.every(g=>g._phase==='final'))return Infinity;
-    return state.games.some(g=>g._phase==='live')?ESPN_LIVE_SCORES_MS:ESPN_IDLE_MS;
-  }
-  function statsRefreshMs(id){
-    const phase=phaseForGameId(id);
-    return phase==='final'?Infinity:phase==='live'?ESPN_LIVE_STATS_MS:ESPN_IDLE_MS;
-  }
-  function resetStatsPollFor(id){
-    if(statsPoll.gameId===id)return;
-    statsPoll.gameId=id;
-    statsPoll.nextAt=0;
-    statsPoll.failures=0;
-  }
-  function statsNeedsRequest(id,force=false){
-    if(force)return true;
-    const cache=viewerState.statsCache.get(id);
-    if(!cache)return true;
-    if(phaseForGameId(id)==='final')return cache.phase!=='final'; // One final snapshot, then stop.
-    return Date.now()-cache.at>=statsRefreshMs(id);
-  }
-  function selectedStatsDueAt(){
-    if(document.hidden||$('viewer').hidden||!viewerState.statsOpen||!viewerState.gameId)return Infinity;
-    const id=viewerState.gameId,cache=viewerState.statsCache.get(id);
-    if(!statsNeedsRequest(id))return cache?cache.at+statsRefreshMs(id):Infinity;
-    return Math.max(statsPoll.nextAt,espnPoll.sharedUntil);
-  }
-  function refreshSelectedStatsIfDue(){
-    if(!viewerState.gameId||viewerState.statsPending.has(viewerState.gameId))return;
-    if(Date.now()>=selectedStatsDueAt())updateStatsSidebar(false,{showCache:false});
-  }
-
-  function validAuraUrl(value){
+/*__COURTSIDE_ESPN_CONFIG__*//*__COURTSIDE_ESPN_REQUEST_SCHEDULER__*//*__COURTSIDE_ESPN_REFRESH_POLICY__*/  function validAuraUrl(value){
     try {
       const url = new URL(value);
       const host = url.hostname.toLowerCase();
@@ -1378,46 +1267,7 @@ function renderStats(game,summary){
   const when=cache?.at?`Updated ${new Date(cache.at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}`:'Waiting for ESPN';
   $('boxStatsStatus').textContent=viewerState.statsError?`${when} · Cached / unavailable`:when;
 }
-async function fetchGameSummary(id,force=false){
-  const cached=viewerState.statsCache.get(id);
-  if(!force&&!statsNeedsRequest(id))return cached?.data;
-  if(viewerState.statsPending.has(id))return viewerState.statsPending.get(id);
-  if(Date.now()<espnPoll.sharedUntil)throw new Error('ESPN rate limit cooldown in progress');
-  if(!force&&statsPoll.gameId===id&&Date.now()<statsPoll.nextAt)
-    throw new Error('ESPN statistics are waiting for retry');
-  const phaseAtRequest=phaseForGameId(id);
-  let summaryResponse=null;
-  const fetchPromise=(async()=>{
-    const controller=new AbortController();let timer;
-    try{
-      const data=await auditESPNJob({source:'Game Center',resource:`Game ${id}`,url:`${SUMMARY_API}?event=${encodeURIComponent(id)}`,priority:1},async report=>{
-        if(Date.now()<espnPoll.sharedUntil)throw new Error('ESPN statistics rate-limit cooldown in progress');
-        timer=setTimeout(()=>controller.abort(),9000);
-        const r=await fetch(`${SUMMARY_API}?event=${encodeURIComponent(id)}`,{cache:'no-store',signal:controller.signal,headers:{Accept:'application/json'}});
-        report(r);
-        if(!r.ok){noteEspnResponseError(r,'stats');throw new Error(`ESPN statistics HTTP ${r.status}`);}
-        return await r.json();
-      });
-      summaryResponse=data;
-      if(!data || typeof data!=='object')throw new Error('Unexpected game summary');
-      dataLogObserve(data,`summary:${id}`,()=>dataLogSummaryRecords(data));
-      viewerState.statsCache.set(id,{at:Date.now(),data,phase:phaseAtRequest});
-      if(statsPoll.gameId===id){statsPoll.failures=0;statsPoll.nextAt=0;}
-      return data;
-    }catch(error){
-      if(summaryResponse)dataLogInvalid(summaryResponse,error);
-      if(statsPoll.gameId===id){
-        statsPoll.failures++;
-        statsPoll.nextAt=Date.now()+exponentialBackoff(statsPoll.failures);
-      }
-      throw error;
-    }finally{clearTimeout(timer);}
-  })();
-  viewerState.statsPending.set(id,fetchPromise);
-  try{return await fetchPromise;}
-  finally{if(viewerState.statsPending.get(id)===fetchPromise)viewerState.statsPending.delete(id);}
-}
-async function updateStatsSidebar(force=false,{showCache=true}={}){
+/*__COURTSIDE_ESPN_GAME_SUMMARY__*/async function updateStatsSidebar(force=false,{showCache=true}={}){
   if($('viewer').hidden||!viewerState.statsOpen)return;
   const id=viewerState.gameId,token=++viewerState.statsSeq;
   if(!id){$('statsContent').innerHTML='<p class="bs-empty">Choose an NBA game to view player statistics.</p>';return;}
