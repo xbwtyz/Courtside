@@ -350,3 +350,19 @@ test('Chunk 08 ticker is an isolated compiled module with unchanged legacy sourc
   const proof=await build({verifyBaseline:true});
   assert.equal(proof.sha256,expectedSha256);
 });
+
+test('Chunk 09 bundles scoreboard renderer, card controls and navigation at classic-script positions',async()=>{
+  const generated=await build();
+  const html=await readFile(generated.path,'utf8');
+  for(const [global,path] of [["CourtsideScoreboardRender","src/features/scoreboard/render.js"],["CourtsideScoreboardCardControls","src/features/scoreboard/card-controls.js"],["CourtsideScoreboardNavigation","src/features/scoreboard/navigation.js"]]){
+    assert.match(html,new RegExp(global));
+    const adapter=await readFile(join(root,path),'utf8');
+    assert.match(adapter,new RegExp(global));
+    const legacy=await readFile(join(root,path.replace('.js','.legacy.js')),'utf8');
+    assert.ok(legacy.length>400);
+  }
+  assert.equal((html.match(/<script\b/gi)||[]).length,1);
+  assert.doesNotMatch(html,/<script[^>]*type=['"]module/i);
+  const legacy=await build({verifyBaseline:true});
+  assert.equal(legacy.sha256,expectedSha256);
+});

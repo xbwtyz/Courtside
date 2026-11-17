@@ -11,6 +11,21 @@ const target = join(root, 'dist', 'courtside.html');
 // Migrated features are real ES modules at build time. Only their compiled
 // browser IIFEs are placed back into the original classic-script positions.
 const bundledFeatures = new Map([
+  ['src/features/scoreboard/render.js', {
+    entry: join(root, 'src/features/scoreboard/render.entry.mjs'),
+    name: 'CourtsideScoreboardRender',
+    legacy: 'src/features/scoreboard/render.legacy.js',
+  }],
+  ['src/features/scoreboard/card-controls.js', {
+    entry: join(root, 'src/features/scoreboard/card-controls.entry.mjs'),
+    name: 'CourtsideScoreboardCardControls',
+    legacy: 'src/features/scoreboard/card-controls.legacy.js',
+  }],
+  ['src/features/scoreboard/navigation.js', {
+    entry: join(root, 'src/features/scoreboard/navigation.entry.mjs'),
+    name: 'CourtsideScoreboardNavigation',
+    legacy: 'src/features/scoreboard/navigation.legacy.js',
+  }],
   ['src/features/ticker/controller.js', {
     entry: join(root, 'src/features/ticker/controller.entry.mjs'),
     name: 'CourtsideTickerController',
