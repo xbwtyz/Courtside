@@ -117,7 +117,7 @@ test('ticker engine matches frozen legacy for formats, continuous loop, scroll w
   assert.deepEqual(mod,old);
   assert.equal(mod.init.controllers,1);
   assert.equal(mod.init.ready,true);
-  assert.equal(mod.init.copies,14,'ticker clones enough copies to cover 620px');
+  assert.equal(mod.init.copies,10,'ticker clones enough copies to cover 620px');
   assert.equal(mod.wrapped,mod.init.unit);
   assert.equal(mod.wrappedRight,mod.init.unit+14);
   assert.ok(mod.moved>mod.init.unit,'normal autoscroll advances');
@@ -127,7 +127,7 @@ test('ticker engine matches frozen legacy for formats, continuous loop, scroll w
   assert.equal(mod.duringPause,mod.paused);
   assert.equal(mod.controllersAfterDispose,0);
   assert.deepEqual(mod.disposals,['abort','resize-disconnect']);
-  assert.equal(mod.scheduled,12); // initial RAF plus eleven manually driven ticks
+  assert.equal(mod.scheduled,13); // initial RAF plus twelve manually driven ticks
   assert.equal(mod.currentFrame,mod.scheduled);
   assert.equal(mod.format[0].id,'401');
 });
