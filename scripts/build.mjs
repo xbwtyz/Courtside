@@ -31,6 +31,12 @@ const featureFragments = [
   ['/*__COURTSIDE_GAME_CENTER_HANDLERS__*/', 'src/features/game-center/handlers.js'],
   ['/*__COURTSIDE_TICKER_CLICKS__*/', 'src/features/ticker/clicks.js'],
   ['/*__COURTSIDE_SCOREBOARD_NAVIGATION__*/', 'src/features/scoreboard/navigation.js'],
+  ['/*__COURTSIDE_PLAYER_PROFILE_DATA__*/', 'src/features/player-profile/data.js'],
+  ['/*__COURTSIDE_PLAYER_PROFILE_DIALOG__*/', 'src/features/player-profile/dialog.js'],
+  ['/*__COURTSIDE_PLAYER_PROFILE_HANDLERS__*/', 'src/features/player-profile/handlers.js'],
+  ['/*__COURTSIDE_LEAGUE_LEADERS_DATA__*/', 'src/features/league-leaders/data.js'],
+  ['/*__COURTSIDE_LEAGUE_LEADERS_RENDER__*/', 'src/features/league-leaders/render.js'],
+  ['/*__COURTSIDE_LEAGUE_LEADERS_HANDLERS__*/', 'src/features/league-leaders/handlers.js'],
   ['/*__COURTSIDE_DATA_LOG_CONTROLS__*/', 'src/features/data-log/controls.js'],
 ];
 
