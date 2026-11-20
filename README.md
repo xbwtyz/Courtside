@@ -6,11 +6,11 @@ Courtside brings the scoreboard, the game, and the numbers into the same browser
 
 The interface runs entirely in your browser using HTML, CSS, vanilla JavaScript, and native SVG charts. There is no build step, backend, package installation, or API key to configure.
 
-> **Latest stable release: [Courtside v1.7.0](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0).** [Download the standalone courtside.html](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html) and open it in your browser. An internet connection is required for scores, statistics, and external players.
+> **Latest stable release: [Courtside Releases](https://github.com/xbwtyz/Courtside/releases/latest).** [Download the standalone courtside.html](https://github.com/xbwtyz/Courtside/releases/latest/download/courtside.html) and open it in your browser. An internet connection is required for scores, statistics, and external players.
 
 ## Quick start
 
-1. Download **[courtside.html from the latest release](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html)**. No software installation or build process is needed.
+1. Download **[courtside.html from the latest release](https://github.com/xbwtyz/Courtside/releases/latest/download/courtside.html)**. No software installation or build process is needed.
 2. Open the downloaded file in a modern browser with JavaScript enabled. Keep the `.html` extension.
 3. Use the date picker, team search, or **Live only** filter to find a matchup.
 4. Click a game card or its **Watch** button to open the viewer.
