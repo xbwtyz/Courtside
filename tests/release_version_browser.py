@@ -12,21 +12,21 @@ with sync_playwright() as pw:
  page.route('**/*',lambda route:route.abort())
  try:
   page.set_content(PATH.read_text('utf8'),wait_until='domcontentloaded',timeout=20000)
-  assert page.title().startswith('Courtside 1.7.0')
+  assert page.title().startswith('Courtside 1.7.1')
   tag_text=page.locator('.version-tag').text_content().strip()
-  assert tag_text=='v1.7.0',repr(tag_text)
-  assert page.locator('.version-tag').get_attribute('aria-label')=='Courtside version 1.7.0'
-  assert page.locator('.cs-settings-foot').inner_text().endswith('Courtside v1.7.0')
+  assert tag_text=='v1.7.1',repr(tag_text)
+  assert page.locator('.version-tag').get_attribute('aria-label')=='Courtside version 1.7.1'
+  assert page.locator('.cs-settings-foot').inner_text().endswith('Courtside v1.7.1')
   page.locator('#appSettingsOpen').click()
   page.locator('#csSettingsTabWhatsnew').click()
-  assert page.locator('#whatsNewVersion option').count()==18
-  assert page.locator('#whatsNewVersion').input_value()=='1.7.0'
+  assert page.locator('#whatsNewVersion option').count()==19
+  assert page.locator('#whatsNewVersion').input_value()=='1.7.1'
   details=page.locator('#whatsNewDetails').text_content() or ''
-  assert 'Modular Architecture' in details,repr(details[:250])
+  assert 'Maintenance & Release Safety' in details,repr(details[:250])
+  page.locator('#whatsNewOlder').click()
+  assert page.locator('#whatsNewVersion').input_value()=='1.7.0'
   page.locator('#whatsNewOlder').click()
   assert page.locator('#whatsNewVersion').input_value()=='1.6.1'
-  page.locator('#whatsNewOlder').click()
-  assert page.locator('#whatsNewVersion').input_value()=='1.6'
   page.locator('#appSettingsClose').click()
   version=page.evaluate("""async()=> {
     let blob;
@@ -44,9 +44,9 @@ with sync_playwright() as pw:
       HTMLAnchorElement.prototype.click=previousClick;
     }
   }""")
-  assert version=={'version':'1.7.0','app':'Courtside','scope':'ESPN requests only'},version
+  assert version=={'version':'1.7.1','app':'Courtside','scope':'ESPN requests only'},version
   assert not errors,errors
-  print("PASS: v1.7.0 browser title, badge, footer, 18 What's New releases, old history and Data Log export agree")
+  print("PASS: v1.7.1 browser title, badge, footer, 19 What's New releases, old history and Data Log export agree")
  finally:
   page.close()
   browser.close()
