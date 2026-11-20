@@ -1,0 +1,82 @@
+name: Publish approved Courtside release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Approved semantic version (for example 1.7.1)'
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: courtside-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Validate release version and prevent overwrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid release version'; exit 1; }
+          test "$VERSION" = "$(node -p "require('./package.json').version")"
+          test "$VERSION" = "$(node --input-type=module -e "import {RELEASE_VERSION} from './src/release/version.mjs'; process.stdout.write(RELEASE_VERSION)")"
+          if gh release view "v$VERSION" >/dev/null 2>&1; then echo 'Release already exists'; exit 1; fi
+          if git ls-remote --exit-code origin "refs/tags/v$VERSION"; then echo 'Tag already exists'; exit 1; fi
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run all release checks
+        run: |
+          npm run check:syntax
+          npm test
+          npm run verify:baseline
+          npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser regression dependencies
+        run: |
+          python -m compileall -q tests
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Run browser regressions
+        run: npm run test:browser
+      - name: Prepare and verify release HTML and Pages homepage
+        run: |
+          set -euo pipefail
+          npm run release:prepare
+          npm run release:verify
+          cmp dist/courtside.html courtside.html
+          cp courtside.html index.html
+          cmp index.html courtside.html
+      - name: Publish approved release
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$current_main" = "$GITHUB_SHA" || { echo 'main changed; review latest main before release'; exit 1; }
+          git add -- courtside.html index.html
+          if git diff --cached --quiet; then echo 'No new release HTML'; exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "release: publish Courtside v$VERSION"
+          git push origin HEAD:refs/heads/main
+          release_sha="$(git rev-parse HEAD)"
+          gh release create "v$VERSION" courtside.html --target "$release_sha" --title "Courtside v$VERSION" --generate-notes --latest
+          mkdir -p /tmp/courtside-verify
+          gh release download "v$VERSION" -p courtside.html -D /tmp/courtside-verify
+          cmp courtside.html /tmp/courtside-verify/courtside.html
