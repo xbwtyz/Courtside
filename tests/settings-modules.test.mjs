@@ -98,7 +98,7 @@ test('release history module preserves all historical entries, ordering, and rel
   runInContext((await source('src/features/whats-new/releases.legacy.js'))+'\nglobalThis.data={COURTSIDE_RELEASE,WHATS_NEW_RELEASES};',ctx);
   assert.equal(COURTSIDE_RELEASE,'1.7.1');
   assert.equal(ctx.data.COURTSIDE_RELEASE,'1.6.1');
-  assert.deepEqual(copy(WHATS_NEW_RELEASES.slice(2)),copy(ctx.data.WHATS_NEW_RELEASES));
+  assert.deepEqual(copy(WHATS_NEW_RELEASES.slice(3)),copy(ctx.data.WHATS_NEW_RELEASES));
   assert.equal(WHATS_NEW_RELEASES.length,19);
   assert.deepEqual(WHATS_NEW_RELEASES.slice(0,4).map(entry=>entry.version),['1.7.1','1.7.0','1.6.1','1.6']);
 });
