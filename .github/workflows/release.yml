@@ -8,6 +8,7 @@ on:
         type: string
 permissions:
   contents: write
+  pages: write
 concurrency:
   group: courtside-release
   cancel-in-progress: false
@@ -80,3 +81,9 @@ jobs:
           mkdir -p /tmp/courtside-verify
           gh release download "v$VERSION" -p courtside.html -D /tmp/courtside-verify
           cmp courtside.html /tmp/courtside-verify/courtside.html
+      - name: Request GitHub Pages rebuild for approved release
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A GITHUB_TOKEN push alone does not trigger branch-based Pages publishing.
+          gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status'

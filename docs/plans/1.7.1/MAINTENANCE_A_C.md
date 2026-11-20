@@ -12,10 +12,11 @@ The approved workflow is one branch, one PR, no merge, tag, public Pages update,
 - [x] Replace the obsolete v1.7.0-only release workflow with a reusable **manual** workflow.
 - [x] Validate approved release input against both package and runtime versions; refuse duplicate tag/release.
 - [x] Update the live Pages `index.html` **only during** the explicitly authorized release workflow.
+- [x] Explicitly request a Pages build after the release commit: GitHub's default workflow token pushes do not trigger branch-based Pages publishing on their own.
 - [ ] Full CI green for this PR and owner review before merge.
 - [ ] Firefox smoke checks before v1.7.1 public release.
 
-**Safeguards:** No CI step commits to Pages. `release:prepare` changes only the temporary GitHub Actions checkout in CI. The manual release workflow runs from `main`, refuses stale main HEADs, never force-pushes, and commits `index.html` and `courtside.html` together before creating the GitHub Release. If partial publication fails, investigate rather than automatically retry.
+**Safeguards:** No CI step commits to Pages. `release:prepare` changes only the temporary GitHub Actions checkout in CI. The manual release workflow runs from `main`, refuses stale main HEADs, never force-pushes, and commits `index.html` and `courtside.html` together before creating the GitHub Release and requesting a Pages rebuild. If partial publication fails, investigate rather than automatically retry.
 
 ## B. Documentation and distribution
 
