@@ -142,11 +142,11 @@ with sync_playwright() as playwright:
             original=inspect(browser,legacy,blocked)
             migrated=inspect(browser,modern,blocked)
             for i,(before,after) in enumerate(zip(original,migrated)):
-                # Release-history identity/count changed intentionally in 1.7.0.
+                # The v1.7.0 and v1.7.1 entries extend the immutable 1.6.1 release list.
                 common=lambda state:{key:value for key,value in state.items() if key not in ('release','whatsNew')}
                 assert common(before)==common(after),f'Settings diverged at step {i} (storage blocked={blocked})'
-                assert after['release']==before['release']+2
-            assert migrated[0]['whatsNew']=='1.7.0'
+                assert after['release']==before['release']+3
+            assert migrated[0]['whatsNew']=='1.7.1'
 
             print(f'PASS: Settings {len(original)} interaction states, storage blocked={blocked}')
     finally:

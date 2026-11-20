@@ -107,16 +107,16 @@ test('storage-denied conditions match the old controller and still render releas
   assert.deepEqual(travel(modern(a), a), travel(legacy(b), b));
 });
 
-test("1.7.0 What's New entry is current, historical 1.6.1 is preserved, and it can be marked read",()=>{
-  assert.equal(COURTSIDE_RELEASE,'1.7.0');
-  assert.equal(WHATS_NEW_RELEASES.length,18);
-  assert.deepEqual(WHATS_NEW_RELEASES.slice(0,3).map(x=>x.version),['1.7.0','1.6.1','1.6']);
+test("1.7.1 What's New entry is current, historical 1.6.1 is preserved, and it can be marked read",()=>{
+  assert.equal(COURTSIDE_RELEASE,'1.7.1');
+  assert.equal(WHATS_NEW_RELEASES.length,19);
+  assert.deepEqual(WHATS_NEW_RELEASES.slice(0,4).map(x=>x.version),['1.7.1','1.7.0','1.6.1','1.6']);
   const env=setup(),api=createWhatsNew({$:env.$,safe:env.safe,releases:WHATS_NEW_RELEASES,currentRelease:COURTSIDE_RELEASE,getStorage:()=>env.storage});
   api.initWhatsNew();
-  assert.equal(env.$('whatsNewVersion').value,'1.7.0');
-  assert.match(env.$('whatsNewDetails').innerHTML,/Modular Architecture &amp; Stability|Modular Architecture & Stability/);
+  assert.equal(env.$('whatsNewVersion').value,'1.7.1');
+  assert.match(env.$('whatsNewDetails').innerHTML,/Maintenance &amp; Release Safety|Maintenance & Release Safety/);
   assert.equal(env.$('whatsNewMainDot').hidden,false);
   api.markWhatsNewRead();
-  assert.equal(env.kv.get('courtside.whatsnew.seen.v1'),'1.7.0');
+  assert.equal(env.kv.get('courtside.whatsnew.seen.v1'),'1.7.1');
   assert.equal(env.$('whatsNewMainDot').hidden,true);
 });

@@ -6,11 +6,11 @@ Courtside brings the scoreboard, the game, and the numbers into the same browser
 
 The interface runs entirely in your browser using HTML, CSS, vanilla JavaScript, and native SVG charts. There is no build step, backend, package installation, or API key to configure.
 
-> **Latest stable release: [Courtside v1.7.0](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0).** [Download the standalone courtside.html](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html) and open it in your browser. An internet connection is required for scores, statistics, and external players.
+> **Latest stable release: [Courtside Releases](https://github.com/xbwtyz/Courtside/releases/latest).** [Download the standalone courtside.html](https://github.com/xbwtyz/Courtside/releases/latest/download/courtside.html) and open it in your browser. An internet connection is required for scores, statistics, and external players.
 
 ## Quick start
 
-1. Download **[courtside.html from the latest release](https://github.com/xbwtyz/Courtside/releases/download/v1.7.0/courtside.html)**. No software installation or build process is needed.
+1. Download **[courtside.html from the latest release](https://github.com/xbwtyz/Courtside/releases/latest/download/courtside.html)**. No software installation or build process is needed.
 2. Open the downloaded file in a modern browser with JavaScript enabled. Keep the `.html` extension.
 3. Use the date picker, team search, or **Live only** filter to find a matchup.
 4. Click a game card or its **Watch** button to open the viewer.
@@ -26,16 +26,16 @@ The HTML file can have any filename when opened locally. Use `index.html` when p
 
 - Separate sections for live, upcoming, and completed games.
 - Date navigation, a **Today** shortcut, team search, and a **Live only** filter.
-- Scoreboard refresh intervals of **15, 30, 60, or 120 seconds**, with 30 seconds selected by default.
+- Adaptive refresh of **10 seconds for live scores** and **60 seconds when idle**; polling pauses for hidden tabs and stops on completed historical dates.
 - Clickable score tickers on the scoreboard and inside the viewer.
 - Game times displayed in your device's time zone.
 - Expandable game-card statistics and links to ESPN Gamecast.
 
 ### Watch in the same window
 
-- A single embedded player with available **AuraSports** and **PPV.st** sources in one menu.
-- AuraSports preferred when opening or switching to a game, when an AuraSports source is available.
-- A live-game dropdown and previous/next buttons with wraparound navigation.
+- **1-, 2-, and 4-screen** viewing layouts, each with its own game and stream source.
+- Stream indexes from **PPV.st**, **AuraSports**, and **Matchora**. PPV.st sources appear first when available, while valid manually selected sources are preserved.
+- A live-game dropdown and previous/next buttons with wraparound navigation for the selected screen.
 - Navigation arrows positioned outside the video.
 - **Theater** mode and a collapsible statistics sidebar.
 - **Retry lookup** to refresh provider listings and **Open stream in new tab** for an external player.
@@ -87,9 +87,9 @@ Charts support overtime, show an empty state when data is unavailable, omit unus
 
 | Component | Source | Refresh behavior |
 | --- | --- | --- |
-| Scores and schedule | ESPN scoreboard feed | Selected interval; default 30 seconds. |
-| Game Center and charts | ESPN game-summary feed | Approximately every 30 seconds while the viewer and statistics panel are open. |
-| Available streams | AuraSports and PPV.st indexes | Cached for two minutes; periodically checked while the viewer is open. **Retry lookup** forces a new lookup. |
+| Scores and schedule | ESPN scoreboard feed | 10 seconds during live games; 60 seconds otherwise, with background and 429 cooldown safeguards. |
+| Game Center and charts | ESPN game-summary feed | 15 seconds for selected live games with stats visible; 60 seconds for non-final idle games; final data is retained. |
+| Available streams | PPV.st, AuraSports, Matchora indexes | Cached for two minutes by provider, with periodic refresh while viewing and manual **Retry lookup**. |
 
 Periodic network refreshes pause while the document is hidden. Game-summary requests share a cache so changing statistical views does not require a separate request for each chart. If a refresh fails, previously loaded summary data can remain visible with a status message.
 
@@ -101,6 +101,7 @@ AuraSports entries are linked using ESPN game IDs. PPV.st basketball entries are
 - [ESPN game summary](https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary) — queried with `?event=GAME_ID` for box scores and chart data.
 - [AuraSports schedule](https://aurasports.xyz/api/schedule) — NBA stream listings.
 - [PPV.st streams](https://api.ppv.st/api/streams) — primary PPV index, with [PPV.to](https://api.ppv.to/api/streams) as a fallback host.
+- [Matchora schedule](https://matchora.to/api/v1/schedule?watchable=1) — additional NBA schedule and stream index, with a fallback host.
 
 These are external website feeds. Their availability, formats, and browser-access policies can change.
 
@@ -142,7 +143,7 @@ The browser contacts ESPN, stream-index services, and embedded-player hosts dire
 
 The scoreboard refresh interval is saved in browser `localStorage` under `courtsideRefreshInterval`. Game summaries and provider indexes are cached in memory for the current page session. Video is not downloaded or recorded by Courtside.
 
-## Development: Courtside 1.7 modular source
+## Development: Courtside 1.7+ modular source
 
 > The **downloaded HTML requires no installation, build tooling or server**. The 1.7 source on `main` uses a build-time toolchain to preserve that single-file delivery format. These steps are for contributors, not end users.
 
@@ -163,7 +164,9 @@ The 47 original script fragments each have one build-time entry, one compiled II
 
 **Published v1.7.0 artifact:** 499,291 bytes, SHA-256 `c07f7066f02df59eff14d9da826ba3d8a793b8dca4bd33197c8cee7a8edc4526` (see the release preparation report). **Development output:** `dist/courtside.html`. **1.6.1 reconstruction:** `dist/courtside-legacy-proof.html`. Neither file needs to be committed. The original 1.6.1 SHA-256 is `0f52ad272cd3fe2259b62ad81464868573c4f1a9dbe8c37607b6bb53a243629e`.
 
-**Courtside v1.7.0 was released from the tested merge commit [`a79aada`](https://github.com/xbwtyz/Courtside/commit/a79aada8b743e735fa83d33e937796070b08a7a7).** The [GitHub Release](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0) contains the verified standalone HTML. To prepare an identical local distribution, run `npm run release:prepare`; to assert that committed `courtside.html` still equals a fresh build, run `npm run release:verify`. The build also supports frozen 1.6.1 output through its immutable `src/index.legacy.html` template. Six owner-run Firefox smoke checks passed; the full historical manual regression checklist remains separate. Future release tags and distribution changes require separate approval.
+**Courtside v1.7.1 is currently a maintenance candidate, not an approved public release.** The production GitHub Pages `index.html` and root `courtside.html` intentionally remain at v1.7.0 until an explicit release approval. PR CI creates an auditable candidate HTML as a downloadable Actions artifact without changing the site. To test the candidate locally, run `npm run release:prepare` and `npm run release:verify` in that order; the first command replaces only your local root `courtside.html`, not the website. Do not commit it into `main` as an ordinary maintenance change.
+
+**Courtside v1.7.0 was released from the tested merge commit [`a79aada`](https://github.com/xbwtyz/Courtside/commit/a79aada8b743e735fa83d33e937796070b08a7a7).** The [GitHub Release](https://github.com/xbwtyz/Courtside/releases/tag/v1.7.0) contains the verified standalone HTML. To prepare an identical local distribution, run `npm run release:prepare`; to assert that committed `courtside.html` still equals a fresh build, run `npm run release:verify`. The build also supports frozen 1.6.1 output through its immutable `src/index.legacy.html` template. Six owner-run Firefox smoke checks passed; the full historical manual regression checklist remains separate. Future tags and distribution changes require separate approval. After PR review, an authorized maintainer explicitly runs **Publish approved Courtside release** on `main` with a matching version input. That workflow runs the same complete automated gates, commits matching `courtside.html` and `index.html` only as part of the approved publication, creates the release asset and tag, and explicitly requests the Pages build (workflow-token pushes alone do not trigger branch-based Pages builds). Normal PR/main CI never deploys Pages. See `docs/plans/1.7.1/MAINTENANCE_A_C.md`.
 
 ## Feedback
 

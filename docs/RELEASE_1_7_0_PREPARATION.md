@@ -1,3 +1,5 @@
+> **Historical record (clarified 2026-11-19):** This document captures the pre-merge 1.7.0 state. PR #1 was later merged, v1.7.0 was released, and the Pages homepage was deployed. Outstanding historical manual QA items remain outstanding; do not interpret them as passed. See the current `docs/plans/1.7.1/MAINTENANCE_A_C.md` for maintenance decisions.
+
 # Courtside v1.7.0 — Release preparation and human validation
 
 **PR:** https://github.com/xbwtyz/Courtside/pull/1 (draft). **Branch:** `refactor/modular-1.7`. **No merge, tag, or GitHub Release until separately authorized.**
