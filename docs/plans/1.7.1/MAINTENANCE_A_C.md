@@ -30,6 +30,7 @@ The approved workflow is one branch, one PR, no merge, tag, public Pages update,
 
 - [x] Replace the manually duplicated 100+ path syntax command with recursive inventory of source, scripts, tests.
 - [x] Test inventory coverage, including frozen legacy code and new modules.
+- [x] Serialize Node test files because multiple build parity tests otherwise write/read the same candidate output path concurrently; no product runtime change.
 - [x] Retire the pinned one-off v1.7.0 publishing workflow; use a reusable workflow.
 - [x] Replace the mutable 1.7.0 candidate checksum pin with two independently hashed identical builds. Continue pinning immutable 1.6.1 baseline SHA.
 - [x] Preserve the 47-fragment architecture contract and no-runtime-import single-file distribution.

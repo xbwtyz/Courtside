@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "verify:baseline": "node scripts/build.mjs --verify-baseline",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
     "test:browser": "npm run verify:baseline && npm run build && python3 tests/release_version_browser.py && python3 tests/browser_smoke.py && python3 tests/whats_new_browser_compare.py && python3 tests/stat_glossary_browser_compare.py && python3 tests/core_utils_browser_compare.py && python3 tests/game_store_browser_compare.py && python3 tests/core_services_browser_compare.py && python3 tests/settings_browser_compare.py && python3 tests/alerts_browser_compare.py && python3 tests/streams_browser_compare.py && python3 tests/viewer_presentation_browser_compare.py && python3 tests/viewer_controller_browser_compare.py && python3 tests/ticker_controller_browser_compare.py && python3 tests/scoreboard_browser_compare.py && python3 tests/scoreboard_data_browser_compare.py && python3 tests/game_center_presentation_browser_compare.py && python3 tests/game_center_logic_browser_compare.py && python3 tests/standings_team_profile_browser_compare.py && python3 tests/player_profile_browser_compare.py && python3 tests/league_leaders_browser_compare.py",
     "build:legacy": "node scripts/build.mjs --verify-baseline",
